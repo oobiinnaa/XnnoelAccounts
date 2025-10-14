@@ -1,0 +1,2824 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Xnnoel Accounts - Revenue</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<style>
+  :root {
+  --bg: #E6F2FF;              
+  --card: #F7FBFF;            
+  --text: #062A44;            
+  --muted: #345C72;           
+
+  --accent: #2563EB;         
+  --hover-accent: #1D4ED8;    
+  --accent-700: #1E3A8A;      
+
+  --border: rgba(37,99,235,0.2); 
+}
+
+[data-theme="dark"] {
+  --bg: #0B1220;              
+  --card: #15213B;            
+  --text: #E2E8F0;
+  --muted: #94A3B8;
+
+  --accent: #3B82F6;
+  --hover-accent: #2563EB;
+  --accent-700: #1E3A8A;
+
+  --border: rgba(255,255,255,0.08);
+}
+
+/* Layout & Containers */
+body {
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  margin:0; background:var(--bg); color:var(--text);
+  transition:.0s; padding:4px;
+}
+.wrap { max-width:2400px; margin:0 auto; padding:4px; box-sizing:border-box; }
+.card,.best-card,.mobile-card {
+  margin:0; padding:10px; border-radius:10px;
+  background:linear-gradient(180deg, var(--card) 0%, #ffffff05 100%);
+  box-shadow:0 6px 18px var(--shadow);
+  box-sizing:border-box;
+}
+
+/* Grid Sections */
+.top-cards,.best-section,.charts-grid { display:grid; gap:8px; margin-bottom:8px; }
+.top-cards { grid-template-columns:repeat(4,1fr); }
+.best-section { grid-template-columns:repeat(3,1fr); }
+.charts-grid { grid-template-columns:repeat(3,1fr); box-sizing:border-box; }
+.charts-grid>.card { overflow:hidden; }
+.charts-grid canvas { max-width:100%!important; height:auto!important; display:block; }
+
+/* Headers & Navigation */
+header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+h1 { margin:0; font-size:28px; }
+.subtitle { color:var(--muted); font-size:14px; }
+.LastUpdatedTitle { color:var(--muted); font-size:14px; }
+.nav,.controls,.filter-row { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+.nav,.controls,.filter-column { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+.nav { justify-content:space-between; margin-bottom:12px; }
+
+/* KPI Cards */
+.kpi { font-size:14px; color:var(--muted); }
+.kpi-val { font-weight:700; font-size:20px; margin-top:6px; }
+.kpi-sub { font-size:14px; color:var(--muted); margin-top:6px; }
+.small { font-size:14px; color:var(--muted); }
+
+/* Inputs & Buttons */
+input[type=date],select,input[type=text] {
+  padding:6px; border-radius:6px; border:1px solid var(--border);
+  font-size:14px; background:var(--card); color:var(--text);
+}
+button {
+  padding:6px 10px; border-radius:6px; border:0; cursor:pointer;
+  font-weight:500; background:var(--accent); color:#fff; transition:.3s;
+}
+button:hover,button:focus { background:var(--hover-accent); }
+button.ghost {
+  background:transparent; color:var(--accent); border:2px solid var(--accent);
+}
+button.ghost:hover,button.ghost:focus { background:var(--hover-accent); color:#fff; }
+
+/* Theme Toggle */
+.theme-toggle {
+  background:none; border:none; cursor:pointer; padding:8px;
+  border-radius:50%; font-size:18px;
+}
+.theme-toggle:hover { background-color:rgba(0,0,0,.05); }
+[data-theme="dark"] .theme-toggle:hover { background-color:rgba(255,255,255,.1); }
+
+/* Tables */
+table { width:100%; border-collapse:collapse; font-size:14px; }
+th,td { padding:10px; text-align:left; border-bottom:1px solid var(--border); }
+th { color:var(--muted); font-weight:1200; cursor:pointer; }
+th.sort-asc::after { content:" ▲"; font-size:10px; }
+th.sort-desc::after { content:" ▼"; font-size:10px; }
+.right { text-align:right; }
+
+/* Print Table Design */
+#recentTable {
+  border-collapse: collapse;
+  width: 100%;
+  font-family: Arial, sans-serif;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+#recentTable tfoot {
+  background-color: #e2e8f0;
+  font-weight: bold;
+}
+
+/* Overlay styles */
+#overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+
+#overlayBox {
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  color: white;
+}
+
+#overlayBox input {
+  width: calc(100% - 24px);
+  padding: 10px;
+  margin-top: 10px;
+  font-size: 14px;
+  background:transparent;
+  color:var(--accent);
+  border:2px solid var(--accent);
+}
+
+#overlayBox button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  font-size: 14px;
+  background-color: #1e40af;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Auto Resize Table*/
+#recentTable,
+#recentTable th,
+#recentTable td {
+    table-layout: auto;
+    width: auto;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-break: break-word;
+}
+
+.table-wrapper {
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+
+  /* Blue scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) var(--card);
+}
+
+.table-wrapper::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+  background: var(--card);
+  border-radius: 10px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 10px;
+  border: 2px solid var(--card);
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--hover-accent);
+}
+
+.table-wrapper thead th {
+  position: sticky;
+  top: 0;
+  background: var(--card);
+  z-index: 2;
+  border-bottom: 2px solid var(--border);
+}
+
+[data-theme="dark"] .table-wrapper thead th {
+  background: var(--card);
+}
+
+/* -------------------------------------------------
+   Cell‑info overlay (tiny tooltip)
+   ------------------------------------------------- */
+#cellInfoOverlay{
+  position: absolute;
+  background:#fff;
+  color:#111;
+  padding:8px 10px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.15);
+  z-index:5000;
+  display:none;
+  max-width:250px;
+  font-size:14px;
+}
+
+/* ----- NEW – expand / collapse ----- */
+  .mobile-card .details {               /* the full transaction block */
+    display: none;                      /* hidden when collapsed   */
+    margin-top: 8px;
+  }
+  .mobile-card.open .details {         /* shown only when the card has .open */
+    display: block;
+  }
+  .mobile-card .summary {               /* the short snippet that is always visible */
+    cursor: pointer;
+}
+
+.mobile-card.open .summary {            /* Hide the one‑line summary when the card is expanded */
+  display: none;
+}
+
+.mobile-card.open > button.ghost {
+    display: none;               /* the button disappears once .open is added */
+  }
+
+/* Text Alignment for Table Mobile View*/
+:root {
+  --divider-color: rgba(0, 0, 0, 0.4);  /* darker for light mode */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --divider-color: rgba(255, 255, 255, 0.3); /* lighter for dark mode */
+  }
+}
+
+/* Date header */
+.details > div:first-child,
+.summary > div:first-child {
+  font-weight: bold;
+  margin-bottom: 6px;
+  text-align: center;   /* like receipts */
+}
+
+/* Row styling */
+.meta {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px dotted var(--divider-color);
+}
+
+.meta:last-child {
+  border-bottom: none;
+}
+
+.meta span:first-child {
+  font-weight: bold;
+  color: #666; /* label a little softer */
+}
+
+.meta span:last-child {
+  text-align: right;
+  flex: 1;
+  margin-left: 8px;
+  color: #000;
+}
+
+/* Hide elements that should never appear on a printed page */
+@media print {
+  .no-print { display: none !important; }
+}
+
+/* Helpers & Animations */
+.arrow.up,.arrow.down { font-weight:700; font-size:14px; vertical-align:middle; }
+.spinner {
+  display:inline-block; width:14px; height:14px;
+  border:4px solid var(--accent); border-top:4px solid transparent;
+  border-radius:50%; animation:spin 1s linear infinite;
+}
+@keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+
+/* Scrollbar Filters */
+#dataFilters,.filter-row {
+  display:flex; gap:10px; flex-wrap:nowrap; margin-bottom:10px;
+  overflow-x:auto; padding-bottom:4px;
+  scrollbar-width:thin; scrollbar-color:var(--accent) var(--bg);
+}
+#dataFilters>div,.filter-row>div { min-width:120px; flex-shrink:0; }
+#dataFilters::-webkit-scrollbar,.filter-row::-webkit-scrollbar { height:6px; }
+#dataFilters::-webkit-scrollbar-track,.filter-row::-webkit-scrollbar-track { background:var(--bg); border-radius:10px; }
+#dataFilters::-webkit-scrollbar-thumb,.filter-row::-webkit-scrollbar-thumb { background:var(--accent); border-radius:10px; }
+#dataFilters::-webkit-scrollbar-thumb:hover,.filter-row::-webkit-scrollbar-thumb:hover { background:var(--hover-accent); }
+
+/* Responsive */
+@media(max-width:1000px) {
+  .top-cards{grid-template-columns:repeat(2,1fr);}
+  .best-section{grid-template-columns:1fr;}
+  .wrap{padding:4px;}
+  .charts-grid{grid-template-columns:1fr;}
+}
+@media(max-width:900px) {
+  body{padding:4px!important;}
+  .wrap{margin:0!important; padding:4px 6px!important; max-width:100%;}
+  .card,.best-card,.mobile-card{margin-bottom:6px!important; padding:8px!important; border-radius:10px!important;}
+  .charts-grid{grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:8px;}
+  .top-cards,.best-section{grid-template-columns:3fr; gap:6px!important; margin-bottom:8px!important;}
+  .table-card{margin-top:6px!important;}
+  .table-wrapper{overflow:auto;}
+  thead th{position:sticky; top:0; padding:8px; border-bottom:1px solid var(--border); text-align:left; color:var(--muted); background:transparent;}
+  tbody td{padding:8px; border-bottom:1px solid var(--border); color:var(--text);}
+  .right{text-align:right;} .subtotal-row{font-weight:700;}
+  .mobile-cards{display:none;}
+  .mobile-card{background:var(--card); border-radius:10px; padding:8px; margin-bottom:6px; box-shadow:0 8px 18px var(--shadow); cursor:pointer; border:1px solid var(--border);}
+  .mobile-card .row{display:flex; justify-content:space-between; align-items:center; font-size:13px;}
+  .mobile-card .meta{font-size:14px; color:var(--muted);}
+  .mobile-card .expanded{margin-top:8px; display:none; font-size:14px;}
+  .mobile-card.open .expanded{display:block;}
+  .table-wrapper,table{display:none!important;}
+  .mobile-cards{display:block!important;}
+}
+@media(min-width:901px){ .mobile-cards{display:none!important;} }
+
+/* Utilities & States */
+.flex-between { display:flex; justify-content:space-between; align-items:flex-start; font-size:14px; }
+.negative { color:var(--danger)!important; }
+.neg-row { background:var(--danger-bg)!important; color:#111!important; }
+.neg-row td,.neg-row th,.neg-row .right,.neg-row .price-cell,.neg-row .meta,.neg-row .bold,.neg-row .italic { color:inherit!important; }
+.neg-row .negative { color:var(--danger)!important; }
+[data-theme="dark"] .neg-row { color:#EBF3FB!important; }
+[data-theme="dark"] .neg-row td,[data-theme="dark"] .neg-row th,[data-theme="dark"] .neg-row .right,[data-theme="dark"] .neg-row .price-cell,[data-theme="dark"] .neg-row .meta,[data-theme="dark"] .neg-row .bold,[data-theme="dark"] .neg-row .italic { color:inherit; }
+
+/* ---------- ACTIVE ROW / CARD ---------- */
+.active-row,.active-card {
+  /* a brighter highlight – use a light yellow tint */
+  background:#C2DBF4 !important;          /* <-- brighter colour */
+  color:var(--text) !important;
+  transform:scale(1.005);
+  box-shadow:0 0 10px var(--active-shadow);
+  transition:transform .18s,box-shadow .18s;
+  z-index:2;
+}
+[data-theme="dark"] .active-row,[data-theme="dark"] .active-card {
+  background:#000000!important; color:var(--text)!important; box-shadow:0 0 10px var(--active-shadow);
+}
+
+.text-grey { color:#475569!important; }
+[data-theme="dark"] .text-grey { color:#CBD5E1!important; }
+
+[data-theme="dark"] input[type=date]::-webkit-calendar-picker-indicator { filter:invert(1) brightness(2); }
+[data-theme="dark"] input[type=date]::placeholder,
+[data-theme="dark"] input[type=date]::-ms-input-placeholder { color:#f1f5f9; }
+
+/* Top Cards and KPIs Scales */
+.qty-scale {
+  font-size: 13px;
+  color: #777;   /* neutral grey that works in light & dark */
+}
+</style>
+</head>
+<body>
+ <div class="wrap">
+  <div class="filter-row">
+    <div id="refreshSpinner" style="display:none; margin:10px 0; text-align:center;">
+      <span class="spinner"></span>
+      <span style="margin-left:8px; font-weight:50; color:var(--accent);">Syncing...</span>
+    </div>
+
+    <div class="nav" style="display:flex; align-items:center; gap:8px;">
+      <button id="calcBaseBtn" type="button" style="margin-left:6px;min-width:110px;">By Revenue</button>
+      <div class="small">
+        <select id="groupBy">
+          <option value="auto">Auto</option>
+          <option value="day">Day</option>
+          <option value="month">Month</option>
+          <option value="quarter">Quarter</option>
+          <option value="year">Year</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <i>
+    <div class="LastUpdatedTitle" id="lastUpdatedText"></div>
+  </i>
+</div>
+
+<div id="dashboardPage">
+  <div class="card" style="margin-bottom:14px">
+    <div class="filter-row">
+      <div>
+        <label class="small">From</label><br>
+        <input type="date" id="fromDate">
+      </div>
+      <div>
+        <label class="small">To</label><br>
+        <input type="date" id="toDate">
+      </div>
+      <div>
+        <label class="small">Year</label><br>
+        <select id="yearFilter"><option value="All">All</option></select>
+      </div>
+      <div>
+        <label class="small">Quarter</label><br>
+        <select id="quarterFilter"><option value="All">All</option></select>
+      </div>
+      <div>
+        <label class="small">Month</label><br>
+        <select id="monthFilter"><option value="All">All</option></select>
+      </div>
+      <div>
+        <label class="small">Week</label><br>
+        <select id="weekFilter"><option value="All">All</option></select>
+      </div>
+
+      <!-- HEADERS MAPPING -->
+      <!-- Cascade filters (single-select, NO multiple attribute) -->
+      <div>
+        <label class="small">Sector</label><br>
+        <select id="sectorFilter"><option value="All">All</option></select>
+      </div>
+      <div>
+        <label class="small">Sub-Sector</label><br>
+        <select id="subSecFilter"><option value="All">All</option></select>
+      </div>
+      <div>
+        <label class="small">Category</label><br>
+        <select id="categoryFilter"><option value="All">All</option></select>
+      </div>
+      <div>
+        <label class="small">Sub-category</label><br>
+        <select id="subCatFilter"><option value="All">All</option></select>
+      </div>
+      <div>
+        <label class="small">Item</label><br>
+        <select id="ItemFilter"><option value="All">All</option></select>
+      </div>
+      <div>
+        <label class="small">Customer</label><br>
+        <select id="CustomerFilter"><option value="All">All</option></select>
+      </div>
+      <div>
+        <label class="small">Attendant</label><br>
+        <select id="AttendantFilter"><option value="All">All</option></select>
+      </div>
+      <div>
+        <label class="small">Transaction</label><br>
+        <select id="transactionFilter"><option value="All">All</option></select>
+      </div>
+
+      <div>
+        <label class="small">Compare</label><br>
+        <select id="compareBy">
+          <option value="none">None</option>
+          <option value="lastYear">Last Year</option>
+          <option value="lastQuarter">Last Quarter</option>
+          <option value="lastMonth">Last Month</option>
+          <option value="lastWeek">Last Week</option>
+        </select>
+      </div>
+      <div>
+        <label class="small">Compared Period</label><br>
+        <select id="comparedPeriod"><option value="">-</option></select>
+      </div>
+    </div>
+  </div>
+
+  <div class="best-section" style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+    <div class="best-card" id="bestCustomer" style="padding:0.4rem 0.6rem; border:1px solid #ddd; border-radius:6px; flex:1; min-width:170px; font-size:14px;">
+      <div style="font-weight:bold; margin-bottom:0.2rem;">
+        <i class="fa-solid fa-star" style="color:gold;"></i> Top Customer
+      </div>
+      <div style="margin-bottom:0.2rem;">
+        <i class="fa-solid fa-coins" style="color:gold;"></i>
+        <span id="bestCustomerRevenue">₦0.00</span> &nbsp;|&nbsp;
+        <i class="fa-solid fa-boxes-stacked" style="color:green;"></i>
+        <span id="bestCustomerQty">0.00</span>
+      </div>
+      <div style="font-weight:bold; color:var(--accent);">
+        <i class="fa-solid fa-user-tie"></i>
+        <span id="bestCustomerName">-</span>
+      </div>
+    </div>
+
+    <div class="best-card" id="bestItem" style="padding:0.4rem 0.6rem; border:1px solid #ddd; border-radius:6px; flex:1; min-width:170px; font-size:14px;">
+      <div style="font-weight:bold; margin-bottom:0.2rem;">
+        <i class="fa-solid fa-star" style="color:gold;"></i> Top Item
+      </div>
+      <div style="margin-bottom:0.2rem;">
+        <i class="fa-solid fa-coins" style="color:gold;"></i>
+        <span id="bestItemRevenue">₦0.00</span> &nbsp;|&nbsp;
+        <i class="fa-solid fa-boxes-stacked" style="color:green;"></i>
+        <span id="bestItemQty">0.00</span>
+      </div>
+      <div style="font-weight:bold; color:var(--accent);">
+        <i class="fa-solid fa-cube"></i>
+        <span id="bestItemName">-</span>
+      </div>
+    </div>
+
+    <div class="best-card" id="bestSector" style="padding:0.4rem 0.6rem; border:1px solid #ddd; border-radius:6px; flex:1; min-width:170px; font-size:14px;">
+      <div style="font-weight:bold; margin-bottom:0.2rem;">
+        <i class="fa-solid fa-star" style="color:gold;"></i> Top Sector
+      </div>
+      <div style="margin-bottom:0.2rem;">
+        <i class="fa-solid fa-coins" style="color:gold;"></i>
+        <span id="bestSectorRevenue">₦0.00</span> &nbsp;|&nbsp;
+        <i class="fa-solid fa-boxes-stacked" style="color:green;"></i>
+        <span id="bestSectorQty">0.00</span>
+      </div>
+      <div style="font-weight:bold; color:var(--accent);">
+        <i class="fa-solid fa-industry"></i>
+        <span id="bestSectorName">-</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="top-cards">
+    <div class="card">
+      <div class="kpi">Total Revenue</div>
+      <div class="kpi-val" id="totalRevenue">₦0</div>
+      <div class="kpi-sub" id="revCompare"></div>
+    </div>
+    <div class="card">
+      <div class="kpi">Total Quantity</div>
+      <div class="kpi-val" id="totalQty">0</div>
+      <div class="kpi-sub" id="qtyCompare"></div>
+    </div>
+    <div class="card">
+      <div class="kpi">Total Customers</div>
+      <div class="kpi-val" id="totalCust">0</div>
+      <div class="kpi-sub" id="custCompare"></div>
+    </div>
+    <div class="card">
+      <div class="kpi">Average Order Value</div>
+      <div class="kpi-val" id="aov">₦0</div>
+      <div class="kpi-sub" id="aovCompare"></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="card" style="height:400px">
+      <strong id="trendChartTitle">Trend in Revenue</strong><p></p>
+      <canvas id="revMonth"></canvas>
+    </div>
+  </div>
+  <p></p>
+  
+  <div style="display:flex; flex-wrap:wrap; gap:20px;">
+
+  <div class="card" style="flex:1 1 calc(50% - 20px); min-width:300px; height:400px;">
+    <strong id="prodTrendChartTitle">Revenue Trend — Items</strong><p></p>
+    <canvas id="growthItems" style="max-width:100%; height:auto; display:block;"></canvas>
+  </div>
+
+  <div class="card" style="flex:1 1 calc(50% - 20px); min-width:300px; height:400px;">
+    <strong id="sectorTrendChartTitle">Revenue Trend — Sectors</strong><p></p>
+    <canvas id="growthSectors" style="max-width:100%; height:auto; display:block;"></canvas>
+  </div>
+
+</div>
+<p></p>
+
+  <div class="charts-grid">
+    <div class="card" style="height:400px">
+      <strong id="subsectorChartTitle">Revenue by Subsectors</strong><p></p>
+      <canvas id="subsectorCompareChart"></canvas>
+    </div>
+    <div class="card" style="height:400px">
+      <strong id="monthCompareChartTitle">Monthly Revenue Comparison (Bar)<p></p></strong>
+      <canvas id="monthCompareBar" height="0"></canvas>
+    </div>
+    <div class="card" style="height:400px">
+      <strong id="sectorChartTitle">Revenue By Sectors</strong><p></p>
+      <canvas id="sectorCompareChart"></canvas>
+    </div>
+    <div class="card" style="height:400px">
+      <strong id="quarterChartTitle">Revenue by Quarter</strong><p></p>
+      <canvas id="revQuarter"></canvas>
+    </div>
+    <div class="card" style="height:400px">
+      <strong id="topProdChartTitle">Top 5 Revenue Items</strong><p></p>
+      <canvas id="topItemsChart"></canvas>
+    </div>
+    <div class="card" style="height:400px">
+      <strong id="topCustChartTitle">Top 5 Customers</strong><p></p>
+      <canvas id="topCustomersChart"></canvas>
+    </div>
+  </div>
+
+<div class="card" style="margin-top:14px">
+  <strong>Transactions</strong>
+  <p></p>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+    <button id="sortDateBtn" style="padding: 8px 12px; background: #1e40af; color: white; border: none; border-radius: 6px; cursor: pointer; display: none;">
+      Sort
+    </button>
+    <button class="ghost" id="printBtn" style="padding: 8px 12px; cursor: pointer;">
+      🖨 Print Table
+    </button>
+  </div>
+
+  <div class="table-wrapper">
+    <table id="transactionsTable" class="table-right">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Transaction</th>
+          <th>Customer</th>
+          <th>Flow</th>
+          <th>Sector</th>
+          <th>Subsector</th>
+          <th>Category</th>
+          <th>SubCategory</th>
+          <th>Item</th>
+          <th>Quantity</th>
+          <th>Scale</th>
+          <th>Size</th>
+          <th class="right">Unit Price</th>
+          <th class="right">Extra Charges</th>
+          <th class="right">Total Price</th>
+          <th>Attendant</th>
+          <th>Evidence</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Rows go here -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile view totals -->
+  <div class="mobile-cards" id="transactionsCards" style="display:none"></div>
+  <div style="margin-top:10px; text-align:right;">
+    <a href="#" id="DashboardTop" style="color:var(--accent);font-size:13px;text-decoration:underline;">Back to Top ⬆</a>
+  </div>
+</div>
+  </div>
+  </div>
+</div>
+
+<!-- Overlay for Print -->
+<div id="overlay">
+  <div id="overlayBox">
+    <h3>Additional information</h3>
+    <input type="text" id="reportInput" placeholder="What is this report for? (optional)">
+    <div>
+      <button id="overlayConfirm">Print</button>
+      <button id="overlayCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { auth, onAuthStateChanged, signOut } from "./auth.js";
+
+  // Redirect if not signed in
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      window.location.href = "index.html";
+    }
+  });
+
+  // Logout function
+  window.logout = () => {
+    signOut(auth).then(() => {
+      window.location.href = "index.html";
+    });
+  };
+
+/** 
+ * Attach a “click‑to‑show‑info” behaviour to every <td> in a table.
+ * @param {string} tableId  – the id of the <table> element.
+ */
+function enableCellInfo(tableId) {
+  const tbl = document.getElementById(tableId);
+  if (!tbl) return;
+
+  // click on any cell → show a tiny overlay near the mouse pointer
+  tbl.addEventListener('click', e => {
+    const td = e.target.closest('td');
+    if (!td) return;                     // not a cell
+    const colIdx = td.cellIndex;          // 0‑based column index
+
+    // find the matching <th> (header) text
+    const th = tbl.querySelector(`thead th:nth-child(${colIdx + 1})`);
+    const header = th ? th.textContent.trim() : `Column ${colIdx + 1}`;
+
+    // value inside the cell (trimmed)
+    const value = td.textContent.trim();
+
+    showCellInfo(header, value, e.pageX, e.pageY);
+  });
+}
+
+/** 
+ * Show the tiny overlay at (x,y) with the supplied header/value.
+ */
+function showCellInfo(header, value, x, y) {
+  const overlay = document.getElementById('cellInfoOverlay');
+  if (!overlay) return;
+
+  overlay.innerHTML = `<strong>${header}</strong>: ${value}`;
+  overlay.style.left = `${x + 12}px`;   // a little offset from the cursor
+  overlay.style.top  = `${y + 12}px`;
+  overlay.style.display = 'block';
+
+  // hide after a few seconds (or when the user clicks elsewhere)
+  clearTimeout(overlay._hideTimer);
+  overlay._hideTimer = setTimeout(() => overlay.style.display = 'none', 3000);
+}
+
+/* -------------------------------------------------
+   Activate the helper for the tables you need
+   ------------------------------------------------- */
+document.addEventListener('DOMContentLoaded', () => {
+  // Sales page – transactions transactions table
+  enableCellInfo('transactionsTable');
+
+  // Revenue page – transactions transactions table (same id)
+  // enableCellInfo('transactionsTable');   // uncomment if you also load Revenue.html in the same frame
+});
+
+// Stores Filter Information
+const FILTER_STORAGE_KEY = "filterStateSALES";
+
+function saveFilterStateSALES() {
+    const filters = document.querySelectorAll(".filter-row select, .filter-row input");
+    const filterState = {};
+
+    filters.forEach(el => {
+        if (el.id) {
+            filterState[el.id] = el.value;
+        }
+    });
+
+    sessionStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filterState));
+}
+
+function restoreFilterStateSALES() {
+    const savedState = JSON.parse(sessionStorage.getItem(FILTER_STORAGE_KEY));
+    if (!savedState) return;
+
+    Object.keys(savedState).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.value = savedState[id];
+        }
+    });
+
+    // After restoring all filters, reapply them
+    if (typeof applyFilters === "function") {
+        applyFilters();
+    }
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+    restoreFilterStateSALES();
+});
+
+document.querySelectorAll(".filter-row select, .filter-row input").forEach(el => {
+    el.addEventListener("change", saveFilterStateSALES);
+});
+
+/* ======= Utility Functions ======= */
+
+function fmtQtyWithScale(qty, Item, dataRows) {
+  // Gather unique Items, Subcategories, and Scales
+  let Items = Array.from(new Set(dataRows.map(r => r.Item).filter(Boolean)));
+  let subcats = Array.from(new Set(dataRows.map(r => r.Subcategory).filter(Boolean)));
+  let scales = Array.from(new Set(dataRows.map(r => r.QtyScale).filter(Boolean)));
+
+  let scale = "";
+
+  // ✅ Logic
+  if (Items.length === 1 && scales.length === 1) {
+    scale = scales[0];
+  } else if (Items.length > 1 && scales.length === 1) {
+    scale = scales[0] + " (Multiple Items)";
+  } else if (Items.length > 1 && scales.length > 1) {
+    scale = "Multi-Scales (Multiple Items)";
+  } else if (Items.length === 1 && scales.length > 1) {
+    scale = "Multi-Scales";
+  } else if (subcats.length === 1 && scales.length === 1) {
+    scale = scales[0];
+  } else {
+    scale = "Multi-Scales";
+  }
+
+  const qtyStr = Number(qty || 0).toLocaleString();
+
+  return scale
+    ? qtyStr + ' <span class="qty-scale">' + scale + '</span>'
+    : qtyStr;
+}
+
+let cardsSortOrder = 'desc';
+let FULLDATA = [], DATA = [];
+let chMonth, chQuarter, chProd, chSector, chTopProd, chTopCust, chMonthCompareBar, chSubsector;
+
+function fmtCurrency(n) {
+  n = Number(n || 0);
+  const absStr = Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  return (n < 0 ? '-' : '') + '₦' + absStr;
+}
+
+function fmtCurrencyWithDecimals(n) {
+  n = Number(n || 0);
+  const absStr = Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (n < 0 ? '-' : '') + '₦' + absStr;
+}
+
+function fmtQty(n) { return Number(n||0).toLocaleString(); }
+
+function fmtDateDisplay(d) {
+  const dt = new Date(d);
+  if (isNaN(dt)) return d || '';
+  const day = String(dt.getDate()).padStart(2, '0');
+  const month = dt.toLocaleString('en-US', { month: 'short' });
+  const year = dt.getFullYear();
+  return `${day}-${month}-${year}`;
+}
+
+function dateToISO(d) {
+  const dt = new Date(d);
+  if(isNaN(dt)) return d;
+  return dt.toISOString().slice(0,10);
+}
+
+function weekKey(d) {
+  const dt = new Date(d); if(isNaN(dt)) return '';
+  const onejan = new Date(dt.getFullYear(),0,1);
+  return dt.getFullYear()+'-W'+Math.ceil(((dt-onejan)/86400000+1)/7).toString().padStart(2,'0');
+}
+
+function monthKey(d) {
+  const dt = new Date(d); return dt.getFullYear()+'-'+(dt.getMonth()+1).toString().padStart(2,'0');
+}
+
+function dayKey(d) {
+  const dt = new Date(d); return dt.getFullYear()+'-'+(dt.getMonth()+1).toString().padStart(2,'0')+'-'+dt.getDate().toString().padStart(2,'0');
+}
+
+function quarterKey(d) {
+  const dt = new Date(d); return dt.getFullYear()+'-Q'+(Math.floor(dt.getMonth()/3)+1);
+}
+
+function yearKey(d) {
+  const dt = new Date(d); return dt.getFullYear().toString();
+}
+
+function monthLabelFromKey(key, style='MMM yyyy') {
+  if(!key) return '';
+  const [y,m] = key.split('-'); const dt = new Date(+y,+m-1,1);
+  if(style==='MMM') return dt.toLocaleString('en-US',{month:'short'});
+  return dt.toLocaleString('en-US',{month:'short', year:'numeric'});
+}
+
+//Last Updated
+function updateLastUpdated() {
+  if (FULLDATA.length === 0) {
+    document.getElementById('lastUpdatedText').textContent = 'Last updated on';
+    return;
+  }
+  
+  // Find the most transactions date
+  const dates = FULLDATA
+    .map(r => new Date(r.Date))
+    .filter(date => !isNaN(date));
+  
+  if (dates.length === 0) {
+    document.getElementById('lastUpdatedText').textContent = 'Last updated on';
+    return;
+  }
+  
+  const mostRecent = new Date(Math.max(...dates));
+  const formattedDate = mostRecent.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  
+  document.getElementById('lastUpdatedText').textContent = `Last updated: ${formattedDate}`;
+}
+
+/* ======= Navigation & Theme ======= */
+function initTheme() {
+  let t = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', t);
+}
+
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('theme', theme);
+
+  if (typeof buildCharts === "function") buildCharts();
+}
+
+/* ======= Dashboard Filters ======= */
+//Sort by Date Button
+document.addEventListener('DOMContentLoaded', function() {
+  // Mobile sort functionality
+  const sortDateBtn = document.getElementById('sortDateBtn');
+  const transactionsCards = document.getElementById('transactionsCards');
+  let sortDescending = true; // default: most recent first
+
+  if (sortDateBtn) {
+    sortDateBtn.addEventListener('click', function() {
+      // Get all mobile cards
+      const cards = Array.from(transactionsCards.querySelectorAll('.mobile-card'));
+      
+      // Parse date safely (format: DD-MMM-YYYY)
+      const parseDate = (dateStr) => {
+        if (!dateStr) return new Date(0); // fallback to earliest
+        const [day, month, year] = dateStr.split('-');
+        const monthMap = {
+          Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+          Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
+        };
+        return new Date(year, monthMap[month] ?? 0, parseInt(day) || 1);
+      };
+
+      // Sort cards by date
+      cards.sort((a, b) => {
+        // Find date in the summary section
+        const dateA = a.querySelector('.summary div strong')?.textContent;
+        const dateB = b.querySelector('.summary div strong')?.textContent;
+        
+        const parsedDateA = parseDate(dateA);
+        const parsedDateB = parseDate(dateB);
+        
+        return sortDescending ? parsedDateB - parsedDateA : parsedDateA - parsedDateB;
+      });
+
+      // Re-append sorted cards
+      cards.forEach(card => transactionsCards.appendChild(card));
+
+      // Toggle order and update button text
+      sortDescending = !sortDescending;
+      sortDateBtn.textContent = sortDescending ? "Sort ↓" : "Sort ↑";
+    });
+  }
+
+  // Show sort button only on mobile
+  function checkMobileView() {
+    const isMobile = window.innerWidth <= 900;
+    if (sortDateBtn) {
+      sortDateBtn.style.display = isMobile ? 'inline-block' : 'none';
+    }
+  }
+  
+  // Initial check
+  checkMobileView();
+  
+  // Check on resize
+  window.addEventListener('resize', checkMobileView);
+});
+
+function getMultiSelectValues(selectId) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return [];
+  return Array.from(sel.selectedOptions).map(opt => opt.value);
+}
+
+//HEADERS MAPPING
+function applyFilters() {
+  const from = document.getElementById('fromDate').value,
+        to = document.getElementById('toDate').value,
+        sectorSel = document.getElementById('sectorFilter').value,
+        subSecSel = document.getElementById('subSecFilter').value,
+        categorySel = document.getElementById('categoryFilter').value,
+        subCatSel = document.getElementById('subCatFilter').value,
+        ItemSel = document.getElementById('ItemFilter').value,
+        CustomerSel = document.getElementById('CustomerFilter').value,
+        AttendantSel = document.getElementById('AttendantFilter').value,
+        transactionSel = document.getElementById('transactionFilter').value,
+        monthSel = document.getElementById('monthFilter').value,
+        yearSel = document.getElementById('yearFilter').value,
+        weekSel = document.getElementById('weekFilter').value,
+        quarterSel = document.getElementById('quarterFilter').value;
+
+  DATA = FULLDATA.filter(r => {
+    const dt = new Date(r.Date);
+
+      // Dropdown filters
+      if (sectorSel && sectorSel !== 'All' && r.Sector !== sectorSel) return false;
+      if (subSecSel && subSecSel !== 'All' && r.Subsector !== subSecSel) return false;
+      if (categorySel && categorySel !== 'All' && r.Category !== categorySel) return false;
+      if (subCatSel && subCatSel !== 'All' && r.SubCat !== subCatSel) return false;
+      if (ItemSel && ItemSel !== 'All' && r.Item !== ItemSel) return false;
+      if (CustomerSel && CustomerSel !== 'All' && r.Customer !== CustomerSel) return false;
+      if (AttendantSel && AttendantSel !== 'All' && r.Attendant !== AttendantSel) return false;
+      if (transactionSel && transactionSel !== 'All' && r.Transaction !== transactionSel) return false;
+  
+      // Date-based filters
+      if (monthSel && monthSel !== 'All' && monthKey(dt) !== monthSel) return false;
+      if (yearSel && yearSel !== 'All' && yearKey(dt) !== yearSel) return false;
+      if (weekSel && weekSel !== 'All' && weekKey(dt) !== weekSel) return false;
+      if (quarterSel && quarterSel !== 'All' && quarterKey(dt) !== quarterSel) return false;
+  
+      // Date range filter
+      if (from && dateToISO(dt) < from) return false;
+      if (to && dateToISO(dt) > to) return false;
+  
+      return true;
+    });
+  
+    buildCharts();
+}
+
+//HEADERS MAPPING
+// Attach onchange listeners for population and filtering
+[
+  'fromDate',
+  'toDate',
+  'yearFilter',
+  'quarterFilter',
+  'monthFilter',
+  'weekFilter',
+  'sectorFilter',
+  'subSecFilter',
+  'categoryFilter',
+  'subCatFilter',
+  'ItemFilter',
+  'CustomerFilter',
+  'AttendantFilter',
+  'transactionFilter',
+  'groupBy',
+].forEach(id => {
+  document.getElementById(id).onchange = function() {
+    populateSelectors();
+    applyFilters();
+  };
+});
+
+['compareBy', 'comparedPeriod'].forEach(id => {
+  document.getElementById(id).onchange = function() {
+    populateComparedPeriodDropdown();
+    applyFilters(); // triggers buildCharts(), which triggers aggregate()
+  };
+});
+
+document.getElementById('compareBy').onchange = function() {
+  const compare = this.value;
+
+  // List all filter IDs except the main compare filter for resetting
+  const filterMap = {
+    lastYear: 'yearFilter',
+    lastQuarter: 'quarterFilter',
+    lastMonth: 'monthFilter',
+    lastWeek: 'weekFilter'
+  };
+
+  // Reset all filters except the main compare period
+  [
+    'yearFilter',
+    'quarterFilter',
+    'monthFilter',
+    'weekFilter',
+    'sectorFilter',
+    'subSecFilter',
+    'categoryFilter',
+    'subCatFilter',
+    'ItemFilter',
+    'CustomerFilter',
+    'AttendantFilter',
+    'transactionFilter',
+  ].forEach(id => {
+    if (id !== filterMap[compare]) document.getElementById(id).value = 'All';
+  });
+
+  if (filterMap[compare]) {
+    // Find available periods in FULLDATA
+    let keyFunc = null;
+    if (compare === 'lastYear') keyFunc = yearKey;
+    else if (compare === 'lastQuarter') keyFunc = quarterKey;
+    else if (compare === 'lastMonth') keyFunc = monthKey;
+    else if (compare === 'lastWeek') keyFunc = weekKey;
+    const periods = Array.from(new Set(FULLDATA.map(r => keyFunc(new Date(r.Date))))).sort();
+    if (periods.length) {
+      // Most recent period
+      document.getElementById(filterMap[compare]).value = periods[periods.length-1];
+      // Set comparedPeriod to preceding period, if exists
+      populateComparedPeriodDropdown();
+      document.getElementById('comparedPeriod').value = periods.length > 1 ? periods[periods.length-2] : periods[periods.length-1];
+    }
+  }
+  applyFilters();
+};
+
+//HEADERS MAPPING
+function populateSelectors() {
+  // Get current selections so they can be restored after refresh
+  const from           = document.getElementById('fromDate').value;
+  const to             = document.getElementById('toDate').value;
+  const yearSel        = document.getElementById('yearFilter').value;
+  const quarterSel     = document.getElementById('quarterFilter').value;
+  const monthSel       = document.getElementById('monthFilter').value;
+  const weekSel        = document.getElementById('weekFilter').value;
+  const sectorSel      = document.getElementById('sectorFilter').value;
+  const subSecSel      = document.getElementById('subSecFilter') 
+                           ? document.getElementById('subSecFilter').value 
+                           : '';
+  const categorySel    = document.getElementById('categoryFilter').value;
+  const subCatSel      = document.getElementById('subCatFilter').value;
+  const ItemSel        = document.getElementById('ItemFilter').value;
+  const transactionSel = document.getElementById('transactionFilter') 
+                           ? document.getElementById('transactionFilter').value 
+                           : '';
+  const CustomerSel    = document.getElementById('CustomerFilter').value;
+  const AttendantSel   = document.getElementById('AttendantFilter') 
+                           ? document.getElementById('AttendantFilter').value 
+                           : '';
+
+  // 1. Filter FULLDATA by From/To date
+  let filtered = FULLDATA.filter(r => {
+    const dt = new Date(r.Date);
+    if (from && dateToISO(dt) < from) return false;
+    if (to && dateToISO(dt) > to) return false;
+    return true;
+  });
+
+  function rebuildSelect(id, values, selectedValue, labelFn = v => v) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '<option value="All">All</option>';
+    [...values].sort().forEach(v => {
+      const o = document.createElement('option');
+      o.value = v;
+      o.innerText = labelFn(v);
+      el.appendChild(o);
+    });
+    if (selectedValue) el.value = selectedValue;
+  }
+
+  // 2. Year filter
+  const yearSet = new Set(filtered.map(r => {
+    const dt = new Date(r.Date);
+    return isNaN(dt) ? null : dt.getFullYear();
+  }).filter(Boolean));
+  rebuildSelect('yearFilter', yearSet, yearSel);
+  if (yearSel && yearSel !== 'All') {
+    filtered = filtered.filter(r => (new Date(r.Date)).getFullYear() === Number(yearSel));
+  }
+
+  // 3. Quarter filter
+  const quarterSet = new Set(filtered.map(r => {
+    const dt = new Date(r.Date);
+    return isNaN(dt) ? null : quarterKey(dt);
+  }).filter(Boolean));
+  rebuildSelect('quarterFilter', quarterSet, quarterSel);
+  if (quarterSel && quarterSel !== 'All') {
+    filtered = filtered.filter(r => quarterKey(new Date(r.Date)) === quarterSel);
+  }
+
+  // 4. Month filter
+  const monthSet = new Set(filtered.map(r => {
+    const dt = new Date(r.Date);
+    return isNaN(dt) ? null : monthKey(dt);
+  }).filter(Boolean));
+  rebuildSelect('monthFilter', monthSet, monthSel, v => monthLabelFromKey(v, 'MMM yyyy'));
+  if (monthSel && monthSel !== 'All') {
+    filtered = filtered.filter(r => monthKey(new Date(r.Date)) === monthSel);
+  }
+
+  // 5. Week filter
+  const weekSet = new Set(filtered.map(r => {
+    const dt = new Date(r.Date);
+    return isNaN(dt) ? null : weekKey(dt);
+  }).filter(Boolean));
+  rebuildSelect('weekFilter', weekSet, weekSel);
+  if (weekSel && weekSel !== 'All') {
+    filtered = filtered.filter(r => weekKey(new Date(r.Date)) === weekSel);
+  }
+
+  // 6. Sector filter
+  const sectorSet = new Set(filtered.map(r => r.Sector).filter(Boolean));
+  rebuildSelect('sectorFilter', sectorSet, sectorSel);
+  if (sectorSel && sectorSel !== 'All') {
+    filtered = filtered.filter(r => r.Sector === sectorSel);
+  }
+
+  // 7. Subsector filter
+  const subSecSet = new Set(filtered.map(r => r.Subsector).filter(Boolean));
+  rebuildSelect('subSecFilter', subSecSet, subSecSel);
+  if (subSecSel && subSecSel !== 'All') {
+    filtered = filtered.filter(r => r.Subsector === subSecSel);
+  }
+
+  // 8. Category filter
+  const categorySet = new Set(filtered.map(r => r.Category).filter(Boolean));
+  rebuildSelect('categoryFilter', categorySet, categorySel);
+  if (categorySel && categorySel !== 'All') {
+    filtered = filtered.filter(r => r.Category === categorySel);
+  }
+
+  // 9. Subcategory filter
+  const subCatSet = new Set(filtered.map(r => r.SubCat).filter(Boolean));
+  rebuildSelect('subCatFilter', subCatSet, subCatSel);
+  if (subCatSel && subCatSel !== 'All') {
+    filtered = filtered.filter(r => r.SubCat === subCatSel);
+  }
+
+  // 10. Item filter
+  const ItemSet = new Set(filtered.map(r => r.Item).filter(Boolean));
+  rebuildSelect('ItemFilter', ItemSet, ItemSel);
+  if (ItemSel && ItemSel !== 'All') {
+    filtered = filtered.filter(r => r.Item === ItemSel);
+  }
+
+  // 11. Customer filter
+  const CustomerSet = new Set(filtered.map(r => r.Customer).filter(Boolean));
+  rebuildSelect('CustomerFilter', CustomerSet, CustomerSel);
+
+  // 12. Attendant filter
+  const AttendantSet = new Set(filtered.map(r => r.Attendant).filter(Boolean));
+  rebuildSelect('AttendantFilter', AttendantSet, AttendantSel);
+
+  // 13. Transaction filter
+  const transactionSet = new Set(filtered.map(r => r.Transaction).filter(Boolean));
+  rebuildSelect('transactionFilter', transactionSet, transactionSel);
+  if (transactionSel && transactionSel !== 'All') {
+    filtered = filtered.filter(r => r.Transaction === transactionSel);
+  }
+}
+
+function populateComparedPeriodDropdown() {
+  const cpSel = document.getElementById('comparedPeriod');
+  const previousSelection = cpSel.value; // save what user picked
+  cpSel.innerHTML = '<option value="">-</option>';
+  cpSel.disabled = false;
+
+  // Collect keys
+  let yearKeys = new Set(), quarterKeys = new Set(), monthKeys = new Set(), weekKeys = new Set();
+  FULLDATA.forEach(r => {
+    const d = new Date(r.Date);
+    if (!isNaN(d)) {
+      yearKeys.add(yearKey(d));
+      quarterKeys.add(quarterKey(d));
+      monthKeys.add(monthKey(d));
+      weekKeys.add(weekKey(d));
+    }
+  });
+
+  // Sort keys
+  yearKeys = Array.from(yearKeys).sort((a, b) => Number(a) - Number(b));
+  quarterKeys = Array.from(quarterKeys).sort((a, b) => {
+    const [ay, aq] = a.split('-Q').map(Number);
+    const [by, bq] = b.split('-Q').map(Number);
+    return ay === by ? aq - bq : ay - by;
+  });
+  monthKeys = Array.from(monthKeys).sort((a, b) => {
+    const [ay, am] = a.split('-').map(Number);
+    const [by, bm] = b.split('-').map(Number);
+    return ay === by ? am - bm : ay - by;
+  });
+  weekKeys = Array.from(weekKeys).sort((a, b) => {
+    const [ay, aw] = a.split('-W').map(Number);
+    const [by, bw] = b.split('-W').map(Number);
+    return ay === by ? aw - bw : ay - by;
+  });
+
+  // Get current comparison type & filter
+  const compare = document.getElementById('compareBy').value;
+  const currentPeriod = document.getElementById(
+    compare === 'lastYear' ? 'yearFilter' :
+    compare === 'lastQuarter' ? 'quarterFilter' :
+    compare === 'lastMonth' ? 'monthFilter' :
+    compare === 'lastWeek' ? 'weekFilter' : ''
+  )?.value;
+
+  if (!currentPeriod) return;
+
+  let showKeys = [];
+
+  if (compare === 'lastYear') {
+    // Always show years that are less than current period
+    showKeys = yearKeys.filter(y => Number(y) < Number(currentPeriod));
+  } else if (compare === 'lastQuarter') {
+    const [cy, cq] = currentPeriod.split('-Q').map(Number);
+    // Always show quarters that are less than current period
+    showKeys = quarterKeys.filter(k => {
+      const [y, q] = k.split('-Q').map(Number);
+      return y < cy || (y === cy && q < cq);
+    });
+  } else if (compare === 'lastMonth') {
+    const [cy, cm] = currentPeriod.split('-').map(Number);
+    // Always show months that are less than current period
+    showKeys = monthKeys.filter(k => {
+      const [y, m] = k.split('-').map(Number);
+      return y < cy || (y === cy && m < cm);
+    });
+  } else if (compare === 'lastWeek') {
+    const [cy, cw] = currentPeriod.split('-W').map(Number);
+    // Always show weeks that are less than current period
+    showKeys = weekKeys.filter(k => {
+      const [y, w] = k.split('-W').map(Number);
+      return y < cy || (y === cy && w < cw);
+    });
+  }
+
+  // Populate dropdown
+  showKeys.forEach(key => {
+    const o = document.createElement('option');
+    o.value = key;
+    if (compare === 'lastMonth') {
+      o.innerText = monthLabelFromKey(key, 'MMM yyyy');
+    } else if (compare === 'lastQuarter') {
+      o.innerText = key.replace('-', ' ');
+    } else {
+      o.innerText = key;
+    }
+    cpSel.appendChild(o);
+  });
+
+  // Restore previous selection if still valid
+  if (previousSelection && showKeys.includes(previousSelection)) {
+    cpSel.value = previousSelection;
+  } else {
+    cpSel.value = '';
+  }
+}
+
+function makeTableSortable(table){
+  if(!table) return;
+  const ths = table.querySelectorAll('thead th');
+  ths.forEach((th, idx) => {
+    th.onclick = function(){
+      const tbody = table.querySelector('tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      let asc = !th.classList.contains('sort-asc');
+      ths.forEach(t => t.classList.remove('sort-asc', 'sort-desc'));
+      th.classList.add(asc ? 'sort-asc' : 'sort-desc');
+      rows.sort((a, b) => {
+        let ta = a.children[idx].textContent.trim();
+        let tb = b.children[idx].textContent.trim();
+        
+        // Handle date sorting
+        if (idx === 0) { // Date column (first column)
+          const dateA = new Date(ta);
+          const dateB = new Date(tb);
+          if (isNaN(dateA) || isNaN(dateB)) {
+            return asc ? ta.localeCompare(tb) : tb.localeCompare(ta);
+          }
+          return asc ? dateA - dateB : dateB - dateA;
+        }
+        
+        // Handle currency values by removing ₦ and commas
+        let na = parseFloat(ta.replace(/₦|,/g, ''));
+        let nb = parseFloat(tb.replace(/₦|,/g, ''));
+        
+        // If parsing fails, treat as strings
+        if (isNaN(na) || isNaN(nb)) {
+          return asc ? ta.localeCompare(tb) : tb.localeCompare(ta);
+        }
+        
+        // Sort numerically
+        return asc ? na - nb : nb - na;
+      });
+      tbody.innerHTML = '';
+      rows.forEach(r => tbody.appendChild(r));
+    };
+  });
+}
+
+/* ======= LISTEN FOR CLEAR FILTER MESSAGE ======= */
+window.addEventListener('message', (event) => {
+  if (!event.data || event.data.action !== 'clearAllFilters') return;
+
+  console.log('🧹 Received clear filter command');
+
+  // Select all input and select elements
+  const inputs = document.querySelectorAll('input');
+  const selects = document.querySelectorAll('select');
+
+  // Clear input values
+  inputs.forEach(input => {
+    if (input.type !== 'button' && input.type !== 'submit' && input.type !== 'hidden') {
+      input.value = '';
+    }
+  });
+
+  // Reset dropdowns
+  selects.forEach(select => {
+    select.selectedIndex = 0;
+  });
+
+  console.log('✅ All filters cleared');
+
+  // 🔁 Reapply filter logic if available
+  if (typeof applyFilters === 'function') {
+    applyFilters();
+    console.log('🔄 Filters reapplied');
+  } else {
+    console.warn('⚠️ applyFilters() function not found');
+  }
+});
+
+/* ======= LISTEN FOR CSV EXPORT MESSAGE ======= */
+window.addEventListener('message', (event) => {
+  if (!event.data || event.data.action !== 'exportCsv') return;
+
+  console.log('📤 Received CSV export command');
+
+  if (!FULLDATA || !FULLDATA.length) {
+    alert("No data to export");
+    return;
+  }
+
+  const headers = [
+    'Date','Transaction','Customer','Flow','Sector','Subsector','Category',
+    'SubCategory','Item','Quantity','Scale','Size','Unit Price',
+    'Extra Charges','Total Price','Attendant','Evidence','Note'
+  ];
+
+  const csv = [headers.join(',')]
+    .concat(FULLDATA.map(r =>
+      headers.map(h => `"${(r[h] || '').toString().replace(/"/g, '""')}"`).join(',')
+    ))
+    .join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'sales_export.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+
+  console.log('✅ CSV file generated');
+});
+
+/* ======= Sync Data ======= */
+// ========= CONFIG FOR THIS FRAME =========
+const FRAME_KEY = "Sales";
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQVKuqaSmipjlNxyd3FxniSLqWCFmfE9CCdGWoicJorraEIbfBPNc5JfecogslujnIWgjtEC1Dkrog_/pub?gid=0&single=true&output=csv";
+
+/* ========= CREATE COLLAPSIBLE STATUS PANEL ========= */
+function createSyncStatus() {
+  let status = document.getElementById("syncStatus");
+  if (!status) {
+    status = document.createElement("div");
+    status.id = "syncStatus";
+    status.style = `
+      position: fixed; top: -10px; right: 0px; background: #000; color: #fff;
+      font-family: system-ui, sans-serif; font-size: 13px; border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 9999; width: 25px; height: 25px;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      transition: all 0.3s ease; overflow: hidden;
+    `;
+    status.innerHTML = `
+      <div id="syncIcon" style="font-size:20px;">⟳</div>
+      <div id="syncDetails" style="display:none; flex-direction:column; padding:10px 14px; min-width:200px;">
+        <div id="syncStatusMsg" style="font-size:13px;">Initializing...</div>
+        <div id="syncSource" style="font-size:11px; color:#ccc; margin-top:3px;">Source: —</div>
+        <div id="lastSyncTime" style="font-size:11px; color:#aaa; margin-top:2px;">Last Sync: —</div>
+      </div>
+    `;
+    status.addEventListener("click", () => {
+      const expanded = status.classList.toggle("expanded");
+      const details = document.getElementById("syncDetails");
+      const icon = document.getElementById("syncIcon");
+      if (expanded) {
+        status.style.width = "230px"; status.style.height = "auto"; status.style.padding = "8px";
+        details.style.display = "flex"; icon.style.display = "none";
+      } else {
+        status.style.width = "25px"; status.style.height = "25px";
+        details.style.display = "none"; icon.style.display = "block";
+      }
+    });
+    document.body.appendChild(status);
+  }
+  return status;
+}
+
+/* ========= UPDATE STATUS ========= */
+function updateSyncStatus(message, source = "", color = "#00bfff", icon = "⟳", spin = false) {
+  const status = createSyncStatus();
+  const msg = document.getElementById("syncStatusMsg");
+  const src = document.getElementById("syncSource");
+  const time = document.getElementById("lastSyncTime");
+  const iconEl = document.getElementById("syncIcon");
+  msg.textContent = message;
+  msg.style.color = color;
+  src.textContent = source ? `Source: ${source}` : "Source: —";
+  time.textContent = `Last Sync: ${new Date().toLocaleTimeString()}`;
+  iconEl.textContent = icon;
+  iconEl.style.animation = spin ? "spin 1s linear infinite" : "none";
+  if (message.match(/Successful|Failed|up to date/i)) setTimeout(() => (status.style.opacity = "0.6"), 4000);
+  else status.style.opacity = "1";
+  if (!document.getElementById("spinStyle")) {
+    const style = document.createElement("style");
+    style.id = "spinStyle";
+    style.textContent = `@keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }`;
+    document.head.appendChild(style);
+  }
+}
+
+/* ========= STORAGE HELPERS ========= */
+function nsKey(key) {
+  return `${FRAME_KEY}_${key}`;
+}
+
+/* ========= CLEAR LOCAL DATA ========= */
+function clearLocalData() {
+  console.log(`[${FRAME_KEY}] Clearing all stored data...`);
+  localStorage.removeItem(nsKey("DATA"));
+  localStorage.removeItem(nsKey("CHECKSUM"));
+  sessionStorage.removeItem(nsKey("HAS_SYNCED_THIS_SESSION"));
+}
+
+/* ========= SYNC BUTTON ========= */
+function syncNow() {
+  // clear before starting
+  clearLocalData();
+
+  updateSyncStatus("Syncing data… Please wait", "Fetching from cloud", "#00bfff", "⟳", true);
+  const spinner = document.getElementById("refreshSpinner");
+  if (spinner) spinner.style.display = "inline";
+  SyncData(SHEET_URL);
+}
+
+/* ========= HANDLE MESSAGES ========= */
+window.addEventListener("message", (event) => {
+  if (!event.data?.action) return;
+  if (event.data.action === "sync") syncNow();
+  if (event.data.action === "setTheme") setTheme(event.data.theme);
+});
+
+/* ========= CHECKSUM FUNCTION ========= */
+function getLightweightChecksum(csvText) {
+  const lines = csvText.split("\n");
+  const subset = lines.slice(0, 5).concat(lines.slice(-5));
+  let hash = 0;
+  subset.forEach(line => {
+    for (let i = 0; i < line.length; i++) hash = (hash + line.charCodeAt(i)) % 1000000000;
+  });
+  return hash;
+}
+
+/* ========= SYNC FUNCTION ========= */
+function SyncData(sheetUrl) {
+  fetch(sheetUrl)
+    .then(res => res.text())
+    .then(csvText => {
+      const newChecksum = getLightweightChecksum(csvText);
+      const storedChecksum = localStorage.getItem(nsKey("CHECKSUM"));
+      if (storedChecksum && storedChecksum == newChecksum) {
+        console.log(`[${FRAME_KEY}] Data unchanged ✅`);
+        updateSyncStatus("Data already up to date ✅", "From Local Storage", "#ffeb3b", "⚠️");
+        const spinner = document.getElementById("refreshSpinner");
+        if (spinner) spinner.style.display = "none";
+        return;
+      }
+
+      Papa.parse(csvText, {
+        header: true, skipEmptyLines: true,
+        complete: (res) => {
+          const newData = res.data
+            .map(r => {
+              const qty = parseFloat(r.Quantity || r.Qty || 0);
+              const unit = parseFloat(r.UnitPrice || r["Unit Price"] || r.Unit || 0);
+              const extra = parseFloat(r.ExtraCharges || r["Extra Charges"] || r.Extra || 0);
+              const total = parseFloat(r.TotalPrice || r["Total Price"] || r.Total || (qty * unit + extra) || 0);
+              return {
+                Customer: r.Customer || "",
+                Transaction: r.Transaction || "",
+                Subsector: r.Subsector || "",
+                Sector: r.Sector || "",
+                Date: r.Date || "",
+                Flow: r.Flow || "",
+                Category: r.Category || "",
+                SubCat: r.Subcategory || "",
+                Item: r.Item || "",
+                Brand: r.Brand || "",
+                Quantity: qty,
+                QtyScale: r.Scale || "",
+                Size: r.Size || "",
+                SizeScale: r.SizeScale || "",
+                UnitPrice: unit,
+                ExtraCharges: extra,
+                TotalPrice: total,
+                Attendant: r.Attendant || "",
+                Evidence: r.Evidence || "",
+                Note: r.Note || "",
+              };
+            })
+            .filter(r => r.Date);
+
+          localStorage.setItem(nsKey("DATA"), JSON.stringify(newData));
+          localStorage.setItem(nsKey("CHECKSUM"), newChecksum);
+          FULLDATA = newData;
+          populateSelectors(); applyFilters(); updateLastUpdated();
+
+          console.log(`[${FRAME_KEY}] Sync Complete ✅`);
+          const spinner = document.getElementById("refreshSpinner");
+          if (spinner) spinner.style.display = "none";
+          updateSyncStatus(`Sync Successful ✅ (${newData.length} records)`, "From Cloud", "#00ff88", "✅");
+        },
+      });
+    })
+    .catch(err => {
+      console.error(`[${FRAME_KEY}] Sync Failed ❌`, err);
+      const spinner = document.getElementById("refreshSpinner");
+      if (spinner) spinner.style.display = "none";
+      updateSyncStatus("Sync Failed ❌", "No connection or invalid link", "#ff4444", "❌");
+    });
+}
+
+/* ========= LOAD LOCAL DATA ON START ========= */
+document.addEventListener("DOMContentLoaded", () => {
+  createSyncStatus();
+  const storedData = localStorage.getItem(nsKey("DATA"));
+
+  if (storedData) {
+    FULLDATA = JSON.parse(storedData);
+    populateSelectors(); applyFilters(); updateLastUpdated();
+    updateSyncStatus("Loaded data successfully ✅", "From Local Storage", "#00ff88", "💾");
+  } else {
+    updateSyncStatus("No local data found ⚠️", "Waiting for cloud sync", "#ffeb3b", "⚠️");
+  }
+
+  if (!sessionStorage.getItem(nsKey("HAS_SYNCED_THIS_SESSION"))) {
+    console.log(`[${FRAME_KEY}] First full tab load — syncing data...`);
+    syncNow();
+    sessionStorage.setItem(nsKey("HAS_SYNCED_THIS_SESSION"), "true");
+  } else {
+    console.log(`[${FRAME_KEY}] Already synced this session ✅`);
+  }
+});
+
+/* ======= Filtering & Aggregation ======= */
+
+// HEADERS MAPPING
+function aggregate() {
+  // Get dashboard filter values
+  const from = document.getElementById('fromDate').value,
+        to = document.getElementById('toDate').value,
+        sectorArr = getMultiSelectValues('sectorFilter'),
+        subSecArr = getMultiSelectValues('subSecFilter'),
+        categoryArr = getMultiSelectValues('categoryFilter'),
+        subCatArr = getMultiSelectValues('subCatFilter'),
+        ItemArr = getMultiSelectValues('ItemFilter'),
+        CustomerArr = getMultiSelectValues('CustomerFilter'),
+        AttendantArr = getMultiSelectValues('AttendantFilter'),
+        TransactionArr = getMultiSelectValues('transactionFilter'),
+        monthSel = document.getElementById('monthFilter').value,
+        yearSel = document.getElementById('yearFilter').value,
+        weekSel = document.getElementById('weekFilter').value,
+        quarterSel = document.getElementById('quarterFilter').value;
+
+  // KPIs for current period
+  const totalRevenue = DATA.reduce((s, r) => s + (Number(r.TotalPrice) || 0), 0);
+  const totalQty = DATA.reduce((s, r) => s + (Number(r.Quantity) || 0), 0);
+  const totalCust = new Set(DATA.map(r => r.Customer)).size;
+  const orders = DATA.length;
+  const aov = orders ? Math.round(totalRevenue / orders) : 0;
+
+  // Show KPIs
+  document.getElementById('totalRevenue').innerText = fmtCurrencyWithDecimals(totalRevenue);
+  document.getElementById('totalQty').innerHTML = fmtQtyWithScale(totalQty, null, DATA);
+  document.getElementById('totalCust').innerText = totalCust;
+  document.getElementById('aov').innerText = orders ? fmtCurrency(aov) : '-';
+
+  const compare = document.getElementById('compareBy').value;
+  let prevRevenue = 0, prevQty = 0, prevCust = 0, prevAOV = 0, compareMsg = '';
+  
+  if (compare !== 'none') {
+    let keyFunc = null, labelFunc = null;
+    
+    if (compare === 'lastMonth') { 
+      keyFunc = monthKey; 
+      labelFunc = k => monthLabelFromKey(k, 'MMM yyyy'); 
+    }
+    else if (compare === 'lastYear') { 
+      keyFunc = yearKey; 
+      labelFunc = k => k; 
+    }
+    else if (compare === 'lastQuarter') { 
+      keyFunc = quarterKey; 
+      labelFunc = k => k.replace('-', ' '); 
+    }
+    else if (compare === 'lastWeek') { 
+      keyFunc = weekKey; 
+      labelFunc = k => k; 
+    }
+    
+    const curKeys = Array.from(new Set(DATA.map(r => keyFunc(new Date(r.Date)))));
+    const curKey = curKeys.length ? curKeys[0] : null;
+    const prevKey = document.getElementById('comparedPeriod').value;
+    
+    let prevData = [];
+    if (prevKey) {
+      prevData = FULLDATA.filter(r => {
+        // Use previous period for key
+        if (keyFunc(new Date(r.Date)) !== prevKey) return false;
+        
+        // All other filters as current period
+        if (sectorArr.length && !sectorArr.includes('All') && !sectorArr.includes(r.Sector || '')) return false;
+        if (subSecArr.length && !subSecArr.includes('All') && !subSecArr.includes(r.Subsector || '')) return false;
+        if (categoryArr.length && !categoryArr.includes('All') && !categoryArr.includes(r.Category || '')) return false;
+        if (subCatArr.length && !subCatArr.includes('All') && !subCatArr.includes(r.SubCat || '')) return false;
+        if (ItemArr.length && !ItemArr.includes('All') && !ItemArr.includes(r.Item || '')) return false;
+        if (CustomerArr.length && !CustomerArr.includes('All') && !CustomerArr.includes(r.Customer || '')) return false;
+        if (AttendantArr.length && !AttendantArr.includes('All') && !AttendantArr.includes(r.Attendant || '')) return false;
+        if (TransactionArr.length && !TransactionArr.includes('All') && !TransactionArr.includes(r.Transaction || '')) return false;
+
+        if (from && r.Date && dateToISO(r.Date) < from) return false;
+        if (to && r.Date && dateToISO(r.Date) > to) return false;
+        
+        // Year, Quarter, Month, Week filters (except the compared period itself)
+        if (compare !== 'lastYear' && yearSel && yearSel !== 'All') {
+          if (String((new Date(r.Date)).getFullYear()) !== String(yearSel)) return false;
+        }
+        if (compare !== 'lastQuarter' && quarterSel && quarterSel !== 'All') {
+          if (quarterKey(new Date(r.Date)) !== quarterSel) return false;
+        }
+        if (compare !== 'lastMonth' && monthSel && monthSel !== 'All') {
+          if (monthKey(new Date(r.Date)) !== monthSel) return false;
+        }
+        if (compare !== 'lastWeek' && weekSel && weekSel !== 'All') {
+          if (weekKey(new Date(r.Date)) !== weekSel) return false;
+        }
+        return true;
+      });
+    }
+    
+    prevRevenue = prevData.reduce((s, r) => s + (Number(r.TotalPrice) || 0), 0);
+    prevQty = prevData.reduce((s, r) => s + (Number(r.Quantity) || 0), 0);
+    prevCust = new Set(prevData.map(r => r.Customer)).size;
+    
+    // Calculate AOV for previous period
+    const prevOrders = prevData.length;
+    prevAOV = prevOrders ? Math.round(prevRevenue / prevOrders) : 0;
+    
+    let thisLabel = curKey, thatLabel = prevKey;
+    if (curKey && prevKey && labelFunc) {
+      thisLabel = labelFunc(curKey); 
+      thatLabel = labelFunc(prevKey);
+      compareMsg = `Comparing with previous period: <strong>${thisLabel}</strong> with <strong>${thatLabel}</strong>`;
+    }
+  }
+  
+  // Update Revenue comparison
+  document.getElementById('revCompare').innerHTML = cmpText(totalRevenue, prevRevenue, "Revenue") + (compareMsg ? `<br><span class="small">${compareMsg}</span>` : "");
+  
+  // Update quantity comparison
+  document.getElementById('qtyCompare').innerHTML = cmpText(totalQty, prevQty, "qty") + (compareMsg ? `<br><span class="small">${compareMsg}</span>` : "");
+  
+  // Add Customer comparison
+  if (compare !== 'none') {
+    const custCompare = cmpText(totalCust, prevCust, "Customer");
+    document.getElementById('totalCust').innerHTML += `<br><span class="small">${custCompare}</span>`;
+  }
+  
+  // Add AOV comparison
+  if (compare !== 'none') {
+    const aovCompare = cmpText(aov, prevAOV, "aov");
+    document.getElementById('aov').innerHTML += `<br><span class="small">${aovCompare}</span>`;
+  }
+
+  // --- Best Customer/Item/Sector ---
+  if (!DATA.length) {
+    ['bestCustomerName', 'bestCustomerRevenue', 'bestCustomerQty',
+     'bestItemName', 'bestItemRevenue', 'bestItemQty',
+     'bestSectorName', 'bestSectorRevenue', 'bestSectorQty'].forEach(id => document.getElementById(id).innerText = '-');
+    document.getElementById('bestCustomerRevenue').innerText = '₦0.00';
+    document.getElementById('bestCustomerQty').innerHTML = '0.00';
+    document.getElementById('bestItemRevenue').innerText = '₦0.00';
+    document.getElementById('bestItemQty').innerHTML = '0.00';
+    document.getElementById('bestSectorRevenue').innerText = '₦0.00';
+    document.getElementById('bestSectorQty').innerHTML = '0.00';
+    return;
+  }
+
+  // Aggregation maps
+  const custAgg = {}, prodAgg = {}, secAgg = {}, custQtyAgg = {}, prodQtyAgg = {}, secQtyAgg = {};
+  DATA.forEach(r => {
+    custAgg[r.Customer] = (custAgg[r.Customer] || 0) + (Number(r.TotalPrice) || 0);
+    custQtyAgg[r.Customer] = (custQtyAgg[r.Customer] || 0) + (Number(r.Quantity) || 0);
+    prodAgg[r.Item] = (prodAgg[r.Item] || 0) + (Number(r.TotalPrice) || 0);
+    prodQtyAgg[r.Item] = (prodQtyAgg[r.Item] || 0) + (Number(r.Quantity) || 0);
+    secAgg[r.Sector] = (secAgg[r.Sector] || 0) + (Number(r.TotalPrice) || 0);
+    secQtyAgg[r.Sector] = (secQtyAgg[r.Sector] || 0) + (Number(r.Quantity) || 0);
+  });
+
+  // Top Customer
+  const bestCust = Object.entries(custAgg).sort((a, b) => b[1] - a[1])[0];
+  if (bestCust) {
+    const custRows = DATA.filter(r => r.Customer === bestCust[0]);
+    document.getElementById('bestCustomerName').innerText = bestCust[0];
+    document.getElementById('bestCustomerRevenue').innerText = fmtCurrencyWithDecimals(bestCust[1]);
+    document.getElementById('bestCustomerQty').innerHTML = fmtQtyWithScale(custQtyAgg[bestCust[0]] || 0, null, custRows);
+  }
+
+  // Top Item
+  const bestProd = Object.entries(prodAgg).sort((a, b) => b[1] - a[1])[0];
+  if (bestProd) {
+    const prodRows = DATA.filter(r => r.Item === bestProd[0]);
+    document.getElementById('bestItemName').innerText = bestProd[0];
+    document.getElementById('bestItemRevenue').innerText = fmtCurrencyWithDecimals(bestProd[1]);
+    document.getElementById('bestItemQty').innerHTML = fmtQtyWithScale(prodQtyAgg[bestProd[0]] || 0, bestProd[0], prodRows);
+  }
+
+  // Top Sector
+  const bestSec = Object.entries(secAgg).sort((a, b) => b[1] - a[1])[0];
+  if (bestSec) {
+    const secRows = DATA.filter(r => r.Sector === bestSec[0]);
+    document.getElementById('bestSectorName').innerText = bestSec[0];
+    document.getElementById('bestSectorRevenue').innerText = fmtCurrencyWithDecimals(bestSec[1]);
+    document.getElementById('bestSectorQty').innerHTML = fmtQtyWithScale(secQtyAgg[bestSec[0]] || 0, null, secRows);
+  }
+}
+
+// Fix the cmpText function to properly handle AOV
+function cmpText(current, prev, type = "Revenue") {
+  if (!prev && !current) return '';
+  if (!prev) return `<span style="color:var(--accent)">Prev: 0 | Change: <span class="arrow up">↑</span> ∞ | %: <span class="arrow up">↑</span> ∞</span>`;
+  
+  const diff = current - prev, 
+        pct = prev ? (diff / prev) * 100 : 0, 
+        up = diff >= 0;
+  
+  const color = up ? 'var(--success)' : 'var(--danger)', 
+        arrow = up ? '<span class="arrow up">↑</span>' : '<span class="arrow down">↓</span>';
+  
+  const fmt = v => {
+    if (type === "Revenue") return fmtCurrencyWithDecimals(v);
+    if (type === "aov") return fmtCurrency(v); // AOV should not have scale
+    if (type === "Customer") return v; // Customer count should not have scale
+    return fmtQtyWithScale(v, "ALL_ItemS", DATA);
+  };
+  
+  // Determine if we should show "Later" instead of "Prev"
+  let prevLabel = "Prev";
+  if (type === "Revenue" || type === "qty") {
+    // For Revenue/quantity, check if compared period is later
+    const compare = document.getElementById('compareBy').value;
+    const curKey = document.getElementById('comparedPeriod').value;
+    const prevKey = document.getElementById('comparedPeriod').value;
+    
+    // Simple check for period ordering (this is a simplified approach)
+    if (compare === 'lastYear' && curKey && prevKey) {
+      if (parseInt(curKey) < parseInt(prevKey)) {
+        prevLabel = "Later";
+      }
+    } else if (compare === 'lastQuarter' && curKey && prevKey) {
+      const [curY, curQ] = curKey.split('-Q').map(Number);
+      const [prevY, prevQ] = prevKey.split('-Q').map(Number);
+      if (curY < prevY || (curY === prevY && curQ < prevQ)) {
+        prevLabel = "Later";
+      }
+    } else if (compare === 'lastMonth' && curKey && prevKey) {
+      const [curY, curM] = curKey.split('-').map(Number);
+      const [prevY, prevM] = prevKey.split('-').map(Number);
+      if (curY < prevY || (curY === prevY && curM < prevM)) {
+        prevLabel = "Later";
+      }
+    } else if (compare === 'lastWeek' && curKey && prevKey) {
+      const [curY, curW] = curKey.split('-W').map(Number);
+      const [prevY, prevW] = prevKey.split('-W').map(Number);
+      if (curY < prevY || (curY === prevY && curW < prevW)) {
+        prevLabel = "Later";
+      }
+    }
+  }
+  
+// Format difference and percentage with + or - sign
+  const diffFormatted = (diff >= 0 ? '+' : '-') + fmt(Math.abs(diff));
+  const formattedPct = (pct >= 0 ? '+' : '-') + Math.abs(pct).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+  const prevFormatted = fmt(prev);
+
+  return `<span>${prevLabel}: ${prevFormatted} | Change: <span style="color:${color}">${arrow} ${diffFormatted}</span> | %: <span style="color:${color}">${arrow} ${formattedPct}</span></span>`;
+}
+
+// ======= Chart Legend Handler =======
+function legendShowOnlyHandler(e, legendItem, legend){
+  const chart=legend.chart,idx=legendItem.datasetIndex;
+  const onlyThisVisible=chart.data.datasets.every((ds,i)=>{
+    const meta=chart.getDatasetMeta(i); return i===idx?!meta.hidden:meta.hidden;
+  });
+  if(onlyThisVisible){
+    chart.data.datasets.forEach((ds,i)=>chart.getDatasetMeta(i).hidden=false);
+  } else {
+    chart.data.datasets.forEach((ds,i)=>chart.getDatasetMeta(i).hidden=(i!==idx));
+  }
+  chart.update();
+}
+
+// ======= Grouping =======
+function resolveGrouping() {
+  const groupEl = document.getElementById('groupBy');
+  let selectedGroup = groupEl ? (groupEl.value || '').trim() : 'auto';
+
+  // --- Collect filter values ---
+  const weekEl = document.getElementById('weekFilter');
+  const monthEl = document.getElementById('monthFilter');
+  const quarterEl = document.getElementById('quarterFilter');
+  const yearEl = document.getElementById('yearFilter');
+
+  const weekSel = weekEl ? (weekEl.value || '').trim() : '';
+  const monthSel = monthEl ? (monthEl.value || '').trim() : '';
+  const quarterSel = quarterEl ? (quarterEl.value || '').trim() : '';
+  const yearSel = yearEl ? (yearEl.value || '').trim() : '';
+
+  let bestGroup = 'year'; // default
+
+  // --- Determine based on filters ---
+  if (weekSel && weekSel !== 'All') bestGroup = 'day';
+  else if (monthSel && monthSel !== 'All') bestGroup = 'day';
+  else if (quarterSel && quarterSel !== 'All') bestGroup = 'month';
+  else if (yearSel && yearSel !== 'All') bestGroup = 'month';
+  else bestGroup = getBestGroupingByDateRange(); // fallback to data-based
+
+  // ✅ Always update dropdown if it exists
+  if (groupEl) {
+    groupEl.value = bestGroup;
+  }
+
+  return bestGroup;
+}
+
+// ✅ Simple date-range-based grouping rule
+function getBestGroupingByDateRange() {
+  if (!FULLDATA || !FULLDATA.length) return 'year';
+
+  const validDates = FULLDATA
+    .map(r => new Date(r.Date))
+    .filter(d => !isNaN(d))
+    .sort((a, b) => a - b);
+
+  if (validDates.length < 2) return 'day';
+
+  const first = validDates[0];
+  const last = validDates[validDates.length - 1];
+  const diffDays = (last - first) / (1000 * 60 * 60 * 24);
+
+  // ✅ Simple logic
+  if (diffDays <= 30) return 'day';
+  if (diffDays < 365) return 'month';
+  return 'year';
+}
+
+
+// ======= Chart Building (with valueField toggle!) =======
+function buildCharts(){
+  aggregate();
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  const textColor=isDark?'#f1f5f9':'#111',gridColor=isDark?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.06)';
+  const groupBy=resolveGrouping();
+  const valueField = (calcBase === 'qty') ? 'Quantity' : 'TotalPrice';
+
+  // Update chart titles
+  document.getElementById('trendChartTitle').textContent = 'Trend in ' + (calcBase==='qty'?'Quantity':'Revenue');
+  document.getElementById('monthCompareChartTitle').textContent = 'Monthly ' + (calcBase==='qty'?'Quantity':'Revenue') + ' Comparison';
+  document.getElementById('sectorChartTitle').textContent = (calcBase==='qty'?'Quantity':'Revenue') + ' By Sectors';
+  document.getElementById('quarterChartTitle').textContent = (calcBase==='qty'?'Quantity':'Revenue') + ' by Quarter';
+  document.getElementById('prodTrendChartTitle').textContent = (calcBase==='qty'?'Quantity':'Revenue') + ' Trend — Items';
+  document.getElementById('sectorTrendChartTitle').textContent = (calcBase==='qty'?'Quantity':'Revenue') + ' Trend — Sectors';
+  document.getElementById('topProdChartTitle').textContent = 'Top 5 Revenue Items';
+  document.getElementById('topCustChartTitle').textContent = 'Top 5 Customers';
+  document.getElementById('subsectorChartTitle').textContent = (calcBase==='qty'?'Quantity':'Revenue') + ' by Subsectors';
+
+  const bucketMap={},keysSet=new Set();
+  DATA.forEach(r=>{
+    const d=new Date(r.Date);if(isNaN(d))return;
+    let key; if(groupBy==='day')key=dayKey(d);else if(groupBy==='month')key=monthKey(d);else if(groupBy==='quarter')key=quarterKey(d);else key=yearKey(d);
+    bucketMap[key]=(bucketMap[key]||0)+(Number(r[valueField])||0);
+    keysSet.add(key);
+  });
+  let bucketKeys=Array.from(keysSet);
+  if(groupBy==='month'||groupBy==='day'||groupBy==='quarter'){
+    bucketKeys.sort((a,b)=>a.localeCompare(b));
+  } else {
+    bucketKeys.sort((a,b)=>Number(a)-Number(b));
+  }
+  function labelForKey(key){
+    if(groupBy==='day'){const parts=key.split('-');const y=parts[0],m=Number(parts[1])-1,d=Number(parts[2]);const dt=new Date(y,m,d);return dt.toLocaleString('en-GB',{day:'2-digit',month:'short'});}
+    if(groupBy==='month'){return monthLabelFromKey(key,'MMM yyyy');}
+    if(groupBy==='quarter'){const yearSel=document.getElementById('yearFilter').value;if(yearSel&&yearSel!=='All'){return key.includes('-Q')?'Q'+key.split('-Q')[1]:key;}else{return key.includes('-Q')?key.split('-Q')[0]:key;}}
+    return key;
+  }
+  if(chMonth)chMonth.destroy();if(chQuarter)chQuarter.destroy();if(chProd)chProd.destroy();if(chSector)chSector.destroy();if(chTopProd)chTopProd.destroy();if(chTopCust)chTopCust.destroy();if(chMonthCompareBar)chMonthCompareBar.destroy();
+  const labels = bucketKeys.map(k=>labelForKey(k));
+  const commonOpts = {layout: {padding: {bottom: 24}},
+    plugins: {legend:{display:true,onClick:legendShowOnlyHandler,labels:{usePointStyle:true,color:textColor,font: { size: 14 }}}}, 
+    responsive:true, maintainAspectRatio:false,
+    scales:{x:{ticks:{color:textColor,font: { size: 14 }},grid:{color:gridColor}},y:{ticks:{display:false,color:textColor,font: { size: 14 }},grid:{color:gridColor}}}
+  };
+  
+  // Total Trnd Chart
+  chMonth = new Chart(document.getElementById('revMonth'), {
+    type: (groupBy==='day'?'bar':'line'),
+    data: {labels, datasets:[{label:(calcBase==='qty'?'Quantity':'Amount'),data:bucketKeys.map(k=>bucketMap[k]||0),fill:false,tension:0.2,backgroundColor:isDark?'rgba(96, 145, 250, 0.5)':'rgba(37, 99, 235, 0.5)',borderColor:isDark?'#60a5fa':'#2563eb'}]},
+    options: commonOpts
+  });
+  // Monthly Comparison Bar Chart
+  const monthTotals = {};
+  DATA.forEach(r => {
+    const dt = new Date(r.Date);
+    if(isNaN(dt)) return;
+    const key = monthKey(dt);
+    monthTotals[key] = (monthTotals[key] || 0) + (Number(r[valueField]) || 0);
+  });
+  const months = Object.keys(monthTotals).sort();
+  const monthLabels = months.map(k => monthLabelFromKey(k, 'MMM yyyy'));
+  chMonthCompareBar = new Chart(document.getElementById('monthCompareBar'), {
+    type: 'bar',
+    data: {
+      labels: monthLabels,
+      datasets: [{
+        label: (calcBase==='qty'?'Quantity':'Amount'),
+        data: months.map(k => monthTotals[k]),
+        backgroundColor: isDark ? 'rgba(96, 145, 250, 0.7)' : 'rgba(37, 99, 235, 0.7)',
+        borderColor: isDark ? '#60a5fa' : '#2563eb'
+      }]
+    },
+    options: {
+      layout: {padding: {bottom: 24}},
+      plugins: {legend:{display:false}},
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {ticks:{color:textColor,font: { size: 14 }},grid:{color:gridColor}},
+        y: {ticks:{display:false},grid:{color:gridColor}}
+      }
+    }
+  });
+  // By Sector Chart
+  if(window.chSectorCompare)window.chSectorCompare.destroy();
+  const sectorTotals={};DATA.forEach(r=>{const sector=r.Sector||'Unknown';sectorTotals[sector]=(sectorTotals[sector]||0)+(Number(r[valueField])||0);});
+  const sectorLabels=Object.keys(sectorTotals).sort(),sectorData=sectorLabels.map(s=>sectorTotals[s]);
+  window.chSectorCompare=new Chart(document.getElementById('sectorCompareChart'),{
+    type:'bar',
+    data:{labels:sectorLabels,datasets:[{label:(calcBase==='qty'?'Qty':'Amount')+' by Sector',data:sectorData,backgroundColor:['#60a5fa','#2563eb','#10b981','#f59e42','#ef4444','#a3e635','#f472b6','#818cf8']}]},
+    options:{layout: {padding: {bottom: 24}},plugins:{legend:{display:true,labels:{color:textColor,font: { size: 14 }}}},responsive:true,maintainAspectRatio:false,scales:{x:{stacked:false,ticks:{color:textColor,font: { size: 14 }},grid:{color:gridColor}},y:{display:false,stacked:false,ticks:{color:textColor,font: { size: 14 }},grid:{color:gridColor}}}}
+  });
+
+  // By Quarter Chart
+  const qYearMap={};DATA.forEach(r=>{const d=new Date(r.Date);if(isNaN(d))return;const y=d.getFullYear(),q='Q'+(Math.floor(d.getMonth()/3)+1);if(!qYearMap[y])qYearMap[y]={Q1:0,Q2:0,Q3:0,Q4:0};qYearMap[y][q]+=(Number(r[valueField])||0);});
+  const years=Object.keys(qYearMap).sort(),quarters=['Q1','Q2','Q3','Q4'],colors=['#60a5fa','#2563eb','#10b981','#f59e42'];
+  chQuarter=new Chart(document.getElementById('revQuarter'),{
+    type:'bar',
+    data:{labels:years,datasets:quarters.map((q,i)=>({label:q,data:years.map(y=>qYearMap[y][q]||0),backgroundColor:colors[i%colors.length]}))},
+    options:{layout: {padding: {bottom: 24}},plugins:{legend:{display:true,labels:{color:textColor,font: { size: 14 }}}},responsive:true,maintainAspectRatio:false,scales:{x:{stacked:false,ticks:{color:textColor,font: { size: 14 }},grid:{color:gridColor}},y:{display:false,stacked:false,ticks:{color:textColor,font: { size: 14 }},grid:{color:gridColor}}}}
+  });
+
+  // Item Trend Chart
+  const pMap={};DATA.forEach(r=>{const key=groupBy==='day'?dayKey(new Date(r.Date)):groupBy==='month'?monthKey(new Date(r.Date)):groupBy==='quarter'?quarterKey(new Date(r.Date)):yearKey(new Date(r.Date));pMap[r.Item]=pMap[r.Item]||{};pMap[r.Item][key]=(pMap[r.Item][key]||0)+(Number(r[valueField])||0);});
+  const topP=Object.entries(pMap).map(([p,m])=>({p,tot:Object.values(m).reduce((a,b)=>a+b,0)})).sort((a,b)=>b.tot-a.tot).slice(0,5).map(x=>x.p);
+  chProd=new Chart(document.getElementById('growthItems'),{
+    type:'line',
+    data:{labels,datasets:topP.map((p,pi)=>({label:p,data:bucketKeys.map(k=>pMap[p]?(pMap[p][k]||0):0),tension:0.2,fill:false}))},
+    options:commonOpts
+  });
+
+  // Sector Trend Chart
+  const sMap={};DATA.forEach(r=>{const key=groupBy==='day'?dayKey(new Date(r.Date)):groupBy==='month'?monthKey(new Date(r.Date)):groupBy==='quarter'?quarterKey(new Date(r.Date)):yearKey(new Date(r.Date));sMap[r.Sector]=sMap[r.Sector]||{};sMap[r.Sector][key]=(sMap[r.Sector][key]||0)+(Number(r[valueField])||0);});
+  const sectorKeys=Object.keys(sMap).sort();
+  chSector=new Chart(document.getElementById('growthSectors'),{
+    type:'line',
+    data:{labels,datasets:sectorKeys.map(s=>({label:s,data:bucketKeys.map(k=>sMap[s][k]||0),tension:0.2,fill:false}))},
+    options:commonOpts
+  });
+
+  // Top Item Chart
+  const prodAgg={};DATA.forEach(r=>prodAgg[r.Item]=(prodAgg[r.Item]||0)+(Number(r[valueField])||0));
+  const topProd=Object.entries(prodAgg).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  chTopProd=new Chart(document.getElementById('topItemsChart'),{
+    type:'bar',
+    data:{labels:topProd.map(x=>x[0]),datasets:[{label:(calcBase==='qty'?'Quantity':'Amount'),data:topProd.map(x=>x[1]),backgroundColor:isDark?'rgba(96, 145, 250, 0.5)':'rgba(37, 99, 235, 0.5)',borderColor:isDark?'#60a5fa':'#2563eb'}]},
+    options:{layout: {padding: {bottom: 24}},plugins:{legend:{display:true,labels:{color:textColor,font: { size: 14 }}}},responsive:true,maintainAspectRatio:false,scales:{x:{stacked:false,ticks:{color:textColor,font: { size: 14 }},grid:{color:gridColor}},y:{display:false,stacked:false,ticks:{color:textColor,font: { size: 14 }},grid:{color:gridColor}}}}
+  });
+
+  // Top Customer Chart
+  const custAgg={};DATA.forEach(r=>custAgg[r.Customer]=(custAgg[r.Customer]||0)+(Number(r[valueField])||0));
+  const topCust=Object.entries(custAgg).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  chTopCust=new Chart(document.getElementById('topCustomersChart'),{
+    type:'bar',
+    data:{labels:topCust.map(x=>x[0]),datasets:[{label:(calcBase==='qty'?'Quantity':'Amount'),data:topCust.map(x=>x[1]),backgroundColor:isDark?'rgba(96, 145, 250, 0.5)':'rgba(37, 99, 235, 0.5)',borderColor:isDark?'#60a5fa':'#2563eb'}]},
+    options:{layout: {padding: {bottom: 24}},plugins:{legend:{display:true,labels:{color:textColor,font: { size: 14 }}}},responsive:true,maintainAspectRatio:false,scales:{x:{stacked:false,ticks:{color:textColor,font: { size: 14 }},grid:{color:gridColor}},y:{display:false,stacked:false,ticks:{color:textColor,font: { size: 14 }},grid:{color:gridColor}}}}
+  });
+  
+  // Subsector Chart
+  const subsectorTotals = {};
+  DATA.forEach(r => {
+    const subsector = r.Subsector || 'Unknown';
+    subsectorTotals[subsector] = (subsectorTotals[subsector] || 0) + (Number(r[valueField]) || 0);
+  });
+  const subsectorLabels = Object.keys(subsectorTotals).sort(), subsectorData = subsectorLabels.map(s => subsectorTotals[s]);
+  if (chSubsector) chSubsector.destroy();
+  chSubsector = new Chart(document.getElementById('subsectorCompareChart'), {
+    type: 'bar',
+    data: {
+      labels: subsectorLabels,
+      datasets: [{
+        label: (calcBase === 'qty' ? 'Qty' : 'Amount') + ' by Subsector',
+        data: subsectorData,
+        backgroundColor: isDark ? 'rgba(96, 145, 250, 0.7)' : 'rgba(37, 99, 235, 0.7)',
+        borderColor: isDark ? '#60a5fa' : '#2563eb'
+      }]
+    },
+    options:{layout: {padding: {bottom: 24}},plugins:{legend:{display:true,labels:{color:textColor,font: { size: 14 }}}},responsive:true,maintainAspectRatio:false,scales:{x:{stacked:false,ticks:{color:textColor,font: { size: 14 }},grid:{color:gridColor}},y:{display:false,stacked:false,ticks:{color:textColor,font: { size: 14 }},grid:{color:gridColor}}}}
+  });
+  renderTransactions();
+}
+
+/* ======= Highlight Negatives ======= */
+function highlightAllNegatives() {
+  document.querySelectorAll(
+    '.kpi-val, td.right, #bestCustomerRevenue, #bestCustomerQty, #bestItemRevenue, #bestItemQty, #bestSectorRevenue, #bestSectorQty, #dataTotalSub, #dataQtySub, .price-cell .bold, .price-cell .italic'
+  ).forEach(el => {
+    const txt = el.textContent.trim();
+    const num = parseFloat(txt.replace(/[^0-9.-]/g, ''));
+    if (!isNaN(num) && num < 0) {
+      el.classList.add('negative');
+    } else {
+      el.classList.remove('negative');
+    }
+  });
+}
+function highlightNegativeRows(tableId) {
+  const tb = document.querySelector(`#${tableId} tbody`);
+  if (!tb) return;
+  Array.from(tb.querySelectorAll('tr')).forEach(tr => {
+    let hasNegative = false;
+    tr.querySelectorAll('td.right').forEach(td => {
+      const num = parseFloat(td.textContent.replace(/[^0-9.-]/g, ''));
+      if (!isNaN(num) && num < 0) hasNegative = true;
+    });
+    if (hasNegative) {
+      tr.classList.add('neg-row');
+    } else {
+      tr.classList.remove('neg-row');
+    }
+  });
+}
+function highlightNegativeCards(containerId) {
+  document.querySelectorAll(`#${containerId} .mobile-card`).forEach(card => {
+    let hasNegative = false;
+    card.querySelectorAll('.price-cell .bold, .price-cell .italic').forEach(span => {
+      const num = parseFloat(span.textContent.replace(/[^0-9.-]/g, ''));
+      if (!isNaN(num) && num < 0) hasNegative = true;
+    });
+    if (hasNegative) {
+      card.classList.add('neg-row');
+    } else {
+      card.classList.remove('neg-row');
+    }
+  });
+}
+
+/* ======= Table Row/Card Selection ======= */
+function enableTableRowSelection(tableId) {
+  const tb = document.querySelector(`#${tableId} tbody`);
+  if (!tb) return;
+  tb.querySelectorAll('tr').forEach(tr => {
+    tr.onclick = function() {
+      tb.querySelectorAll('tr').forEach(r => r.classList.remove('active-row'));
+      tr.classList.add('active-row');
+    };
+    tr.style.cursor = 'pointer';
+  });
+}
+function enableCardSelection(containerId) {
+  const cont = document.getElementById(containerId);
+  if (!cont) return;
+  cont.querySelectorAll('.mobile-card').forEach(card => {
+    card.onclick = function() {
+      cont.querySelectorAll('.mobile-card').forEach(c => c.classList.remove('active-card'));
+      card.classList.add('active-card');
+    };
+    card.style.cursor = 'pointer';
+  });
+}
+
+/* -------------------------------------------------
+   Render transactions (table + mobile cards)
+   ------------------------------------------------- */
+function renderTransactions() {
+  const tbody   = document.querySelector('#transactionsTable tbody');
+  const cardBox = document.getElementById('transactionsCards');
+  tbody.innerHTML = '';
+  cardBox.innerHTML = '';
+
+  /* ---------- 1️⃣  Sort data – newest first ---------- */
+  const sorted = [...DATA].sort((a, b) => new Date(b.Date) - new Date(a.Date));
+
+  /* ---------- 2️⃣  Show only the first 10 rows ---------- */
+  const SHOW_COUNT = 10;
+  const rowsToShow = sorted.slice(0, SHOW_COUNT);
+
+  /* ---------- 3️⃣  Helper – per-row Print button ---------- */
+  const makePrintBtn = (row) => {
+    const btn = document.createElement('button');
+    btn.className = 'ghost row-print-btn';
+    btn.type = 'button';
+    btn.textContent = 'Print';
+    btn.onclick = () => printTransaction(row);
+    return btn;
+  };
+
+  /* ---------- 4️⃣  Helper – render a mobile card ---------- */
+  function makeMobileCard(r) {
+    const card = document.createElement('div');
+    card.className = 'mobile-card';
+
+    // summary – always visible
+    const summary = document.createElement('div');
+    summary.className = 'summary';
+    summary.innerHTML = `
+      <div><strong>${fmtDateDisplay(r.Date)}</strong></div>
+      <div class="meta"><strong>Transaction:</strong> ${r.Transaction || ''}</div>
+      <div class="meta"><strong>Customer:</strong> ${r.Customer || ''}</div>
+      <div class="meta"><strong>Item:</strong> ${r.Item || ''}</div>
+      <div class="meta"><strong>Qty:</strong> ${fmtQty(r.Quantity)}${r.QtyScale ? ' ' + r.QtyScale : ''}</div>
+      <div class="meta"><strong>Total:</strong> ${fmtCurrencyWithDecimals(r.TotalPrice)}</div>
+    `;
+
+    // Show Details button
+    const showMore = document.createElement('button');
+    showMore.className = 'ghost';
+    showMore.textContent = 'Show Details';
+    showMore.style.marginTop = '8px';
+    showMore.onclick = () => card.classList.add('open');
+
+    // details – hidden until .open
+    const details = document.createElement('div');
+    details.className = 'details';
+    details.innerHTML = `
+      <div><strong>${fmtDateDisplay(r.Date)}</strong></div>
+      <div class="meta"><strong>Transaction:</strong> ${r.Transaction || ''}</div>
+      <div class="meta"><strong>Customer:</strong> ${r.Customer || ''}</div>
+      <div class="meta"><strong>Flow:</strong> ${r.Flow || ''}</div>
+      <div class="meta"><strong>Sector:</strong> ${r.Sector || ''}</div>
+      <div class="meta"><strong>Subsector:</strong> ${r.Subsector || ''}</div>
+      <div class="meta"><strong>Category:</strong> ${r.Category || ''}</div>
+      <div class="meta"><strong>SubCategory:</strong> ${r.SubCat || ''}</div>
+      <div class="meta"><strong>Item:</strong> ${r.Item || ''}</div>
+      <div class="meta"><strong>Qty:</strong> ${fmtQty(r.Quantity)} ${r.QtyScale || ''}</div>
+      <div class="meta"><strong>Size:</strong> ${r.Size || ''} ${r.SizeScale || ''}</div>
+      <div class="meta"><strong>Unit Price:</strong> ${fmtCurrencyWithDecimals(r.UnitPrice)}</div>
+      <div class="meta"><strong>Extra Charges:</strong> ${fmtCurrencyWithDecimals(r.ExtraCharges || 0)}</div>
+      <div class="meta"><strong>Total Price:</strong> ${fmtCurrencyWithDecimals(r.TotalPrice)}</div>
+      <div class="meta"><strong>Attendant:</strong> ${r.Attendant || ''}</div>
+      <div class="meta"><strong>Evidence:</strong> ${r.Evidence || ''}</div>
+      <div class="meta"><strong>Note:</strong> ${r.Note || ''}</div>
+    `;
+
+    // Hide Details button
+    const lessBtn = document.createElement('button');
+    lessBtn.className = 'ghost';
+    lessBtn.style.marginTop = '8px';
+    lessBtn.textContent = 'Hide Details';
+    lessBtn.onclick = () => card.classList.remove('open');
+    details.appendChild(lessBtn);
+
+    // working Print button ✅
+    details.appendChild(makePrintBtn(r));
+
+    // assemble card
+    card.appendChild(summary);
+    card.appendChild(showMore);
+    card.appendChild(details);
+
+    return card;
+  }
+
+  /* ---------- 5️⃣  Helper – render one transaction (table + mobile card) ---------- */
+  function renderOneTransaction(r) {
+    // Table row
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td data-label="Date">${fmtDateDisplay(r.Date)}</td>
+      <td data-label="Transaction">${r.Transaction || ''}</td>
+      <td data-label="Customer">${r.Customer || ''}</td>
+      <td data-label="Flow">${r.Flow || ''}</td>
+      <td data-label="Sector">${r.Sector || ''}</td>
+      <td data-label="Subsector">${r.Subsector || ''}</td>
+      <td data-label="Category">${r.Category || ''}</td>
+      <td data-label="SubCategory">${r.SubCat || ''}</td>
+      <td data-label="Item">${r.Item || ''}</td>
+      <td data-label="Quantity">${fmtQty(r.Quantity)}</td>
+      <td data-label="Scale">${r.QtyScale || ''}</td>
+      <td data-label="Size">${r.Size || ''}${r.SizeScale ? ' ' + r.SizeScale : ''}</td>
+      <td data-label="Unit Price" class="right">${fmtCurrencyWithDecimals(r.UnitPrice)}</td>
+      <td data-label="Extra Charges" class="right">${fmtCurrencyWithDecimals(r.ExtraCharges || 0)}</td>
+      <td data-label="Total Price" class="right">${fmtCurrencyWithDecimals(r.TotalPrice)}</td>
+      <td data-label="Attendant">${r.Attendant || ''}</td>
+      <td data-label="Evidence">${r.Evidence || ''}</td>
+      <td data-label="Note">${r.Note || ''}</td>
+    `;
+    const tdPrint = document.createElement('td');
+    tdPrint.appendChild(makePrintBtn(r));
+    tr.appendChild(tdPrint);
+    tbody.appendChild(tr);
+
+    // Mobile card
+    cardBox.appendChild(makeMobileCard(r));
+  }
+
+  /* ---------- 6️⃣  Render initial (first 10) ---------- */
+  rowsToShow.forEach(renderOneTransaction);
+
+  /* ---------- 7️⃣  Dual View Controls ---------- */
+const oldControls = document.getElementById('ViewControls');
+if (oldControls) oldControls.remove();
+
+if (sorted.length > SHOW_COUNT) {
+  // Create container for both left & right controls
+  const controls = document.createElement('div');
+  controls.id = 'ViewControls';
+  controls.style.display = 'flex';
+  controls.style.justifyContent = 'space-between';
+  controls.style.marginTop = '10px';
+
+  /* ----- Left side (View All / View Less) ----- */
+  const leftGroup = document.createElement('div');
+
+  const btnViewAll = document.createElement('button');
+  btnViewAll.textContent = 'View All';
+  styleBtn(btnViewAll);
+
+  const btnViewLess = document.createElement('button');
+  btnViewLess.textContent = 'View Less';
+  styleBtn(btnViewLess);
+
+  leftGroup.appendChild(btnViewAll);
+  leftGroup.appendChild(btnViewLess);
+
+  /* ----- Right side (Show 10 / Less 10) ----- */
+  const rightGroup = document.createElement('div');
+
+  const btnShow10 = document.createElement('button');
+  btnShow10.textContent = 'Show 10';
+  styleBtn(btnShow10);
+
+  const btnLess10 = document.createElement('button');
+  btnLess10.textContent = 'Less 10';
+  styleBtn(btnLess10);
+
+  rightGroup.appendChild(btnShow10);
+  rightGroup.appendChild(btnLess10);
+
+  /* ----- Put groups into container ----- */
+  controls.appendChild(leftGroup);
+  controls.appendChild(rightGroup);
+
+  // Append controls under transaction container
+  const container = document.getElementById('transactionsContainer') || cardBox.parentNode;
+  container.appendChild(controls);
+
+  /* ---------- Functions ---------- */
+  let visibleCount = SHOW_COUNT; // start with 10
+
+  const renderRows = count => {
+    tbody.innerHTML = '';
+    cardBox.innerHTML = '';
+    sorted.slice(0, count).forEach(renderOneTransaction);
+  };
+
+  // Initial render = 10 rows
+  renderRows(visibleCount);
+
+  /* ---------- Button Actions ---------- */
+  btnViewAll.onclick = () => {
+    visibleCount = sorted.length;
+    renderRows(visibleCount);
+  };
+
+  btnViewLess.onclick = () => {
+    visibleCount = SHOW_COUNT;
+    renderRows(visibleCount);
+  };
+
+  btnShow10.onclick = () => {
+    visibleCount = Math.min(visibleCount + SHOW_COUNT, sorted.length);
+    renderRows(visibleCount);
+  };
+
+  btnLess10.onclick = () => {
+    visibleCount = Math.max(visibleCount - SHOW_COUNT, SHOW_COUNT);
+    renderRows(visibleCount);
+  };
+}
+
+/* ----- Styling helper ----- */
+function styleBtn(btn) {
+  btn.style.margin = '0 5px';
+  btn.style.padding = '6px 10px';
+  btn.style.background = '#1e40af';
+  btn.style.color = 'white';
+  btn.style.border = 'none';
+  btn.style.borderRadius = '6px';
+  btn.style.cursor = 'pointer';
+}
+
+
+  /* ---------- 8️⃣  Re-apply helpers ---------- */
+  makeTableSortable(document.getElementById('transactionsTable'));
+  highlightAllNegatives();
+  highlightNegativeRows('transactionsTable');
+  highlightNegativeCards('transactionsCards');
+  enableTableRowSelection('transactionsTable');
+  enableCardSelection('transactionsCards');
+}
+
+
+/* -------------------------------------------------
+   Print a single transaction (only the requested fields)
+   ------------------------------------------------- */
+function printTransaction(row) {
+  const win = window.open('', '', 'width=400,height=600'); // A6-ish size
+  const fmt = v => v ?? '';
+
+  const now = new Date();
+  const printedAt = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+
+  const html = `
+    <html>
+    <head>
+      <title>Receipt Preview</title>
+      <style>
+        body {
+          font-family: monospace;
+          width: 280px;               /* receipt-like width */
+          margin: 0 auto;
+          padding: 10px;
+          background: #fff;
+          color: #000;
+        }
+        h2 { text-align:center; margin:0; font-size:14px; }
+        .company { text-align:center; font-size:12px; margin-bottom:10px; }
+        table { width:100%; border-collapse:collapse; font-size:12px; }
+        td { padding:2px 0; }
+        .label {
+          font-weight:bold;
+          text-align:left;
+          width:50%;
+        }
+        .value {
+          text-align:right;
+          width:50%;
+        }
+        .total td {
+          border-top:1px dashed #000;
+          font-weight:bold;
+        }
+        .footer { text-align:center; margin-top:12px; font-size:11px; }
+        .printed-time { text-align:center; font-size:10px; margin-top:4px; }
+        .no-print {
+          display:block;
+          margin:15px auto;
+          padding:6px 12px;
+          border:1px solid #333;
+          background:#f8f8f8;
+          font-family:monospace;
+          cursor:pointer;
+        }
+      </style>
+    </head>
+    <body>
+      <h2>My Company Name</h2>
+      <div class="company">
+        123 Main Street, City<br>
+        Tel: 0800-123-4567
+      </div>
+      <table>
+        <tr><td class="label">Date</td><td class="value">${fmtDateDisplay(row.Date)}</td></tr>
+        <tr><td class="label">Sector</td><td class="value">${fmt(row.Sector)}</td></tr>
+        <tr><td class="label">Transaction</td><td class="value">${fmt(row.Transaction)}</td></tr>
+        <tr><td class="label">Customer</td><td class="value">${fmt(row.Customer)}</td></tr>
+        <tr><td class="label">Item</td><td class="value">${fmt(row.Item)}</td></tr>
+        <tr><td class="label">Qty</td><td class="value">${fmtQty(row.Quantity)} ${row.QtyScale ?? ''}</td></tr>
+        <tr><td class="label">Unit Price</td><td class="value">${fmtCurrencyWithDecimals(row.UnitPrice)}</td></tr>
+        <tr><td class="label">Extra Charges</td><td class="value">${fmtCurrencyWithDecimals(row.ExtraCharges||0)}</td></tr>
+        <tr class="total"><td class="label">TOTAL</td><td class="value">${fmtCurrencyWithDecimals(row.TotalPrice)}</td></tr>
+        <tr><td class="label">Attendant</td><td class="value">${fmt(row.Attendant)}</td></tr>
+        <tr><td class="label">Note</td><td class="value">${fmt(row.Note)}</td></tr>
+      </table>
+      <div class="footer">
+        Thank you for your business!
+      </div>
+      <div class="printed-time">
+        Printed: ${printedAt}
+      </div>
+      <button class="no-print" onclick="window.print()">🖨️ Print Now</button>
+    </body>
+    </html>
+  `;
+
+  win.document.write(html);
+  win.document.close();
+}
+
+// ===============================
+// Overlay for Printing
+// ===============================
+const overlay = document.getElementById("overlay");
+const overlayCancel = document.getElementById("overlayCancel");
+const overlayConfirm = document.getElementById("overlayConfirm");
+const printBtn = document.getElementById("printBtn");
+
+function showOverlay() {
+  if (overlay) {
+    overlay.style.display = "flex";
+    const input = document.getElementById("reportInput");
+    if (input) input.focus();
+  }
+}
+
+function hideOverlay() {
+  if (overlay) overlay.style.display = "none";
+}
+
+if (overlayCancel) {
+  overlayCancel.addEventListener("click", hideOverlay);
+}
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") hideOverlay();
+});
+
+if (overlayConfirm) {
+  overlayConfirm.addEventListener("click", function () {
+    const input = document.getElementById("reportInput");
+    const reportName = input ? input.value.trim() : "";
+    hideOverlay();
+    printTransactionsTable(reportName);
+  });
+}
+
+if (printBtn) {
+  printBtn.addEventListener("click", showOverlay);
+}
+
+function printTransactionsTable(reportName = "") {
+  const table = document.getElementById("transactionsTable");
+  if (!table) return;
+
+  const companyName = "Hellofeen Ltd";
+  let reportTitle = "Purchase Report";
+  if (reportName) reportTitle += ` for ${reportName}`;
+
+  // ====== Filter visible rows ======
+  const visibleRows = Array.from(table.querySelectorAll("tbody tr"))
+    .filter(row => row.style.display !== "none");
+
+  // ====== Extract Date Range ======
+  const dates = visibleRows
+    .map(row => {
+      const cell = row.cells[0];
+      if (!cell) return null;
+      const text = cell.textContent.trim();
+      const parts = text.split(/[\/-]/);
+      let date = null;
+      if (parts.length === 3) {
+        if (parts[2].length === 4) {
+          date = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`); // DD/MM/YYYY
+        } else {
+          date = new Date(text);
+        }
+      } else {
+        date = new Date(text);
+      }
+      return isNaN(date) ? null : date;
+    })
+    .filter(d => d);
+
+  const formatDate = d =>
+    d.toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
+
+  const minDate = dates.length ? new Date(Math.min(...dates)) : null;
+  const maxDate = dates.length ? new Date(Math.max(...dates)) : null;
+  const dateRange =
+    minDate && maxDate ? `For ${formatDate(minDate)} to ${formatDate(maxDate)}` : "";
+
+  // ====== Totals ======
+  let totalQty = 0;
+  let totalAmount = 0;
+
+  visibleRows.forEach(row => {
+    const qtyCell = row.cells[9];
+    const amountCell = row.cells[14];
+    const qtyText = (qtyCell?.textContent || "").replace(/[^\\d.-]/g, "");
+    const amtText = (amountCell?.textContent || "").replace(/[^\\d.-]/g, "");
+    totalQty += parseFloat(qtyText) || 0;
+    totalAmount += parseFloat(amtText) || 0;
+  });
+
+  const fmtQty = val => val.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  const fmtCurrencyWithDecimals = val =>
+    val.toLocaleString("en-NG", { style: "currency", currency: "NGN", minimumFractionDigits: 2 });
+
+  // ====== Clone Table ======
+  const tableClone = table.cloneNode(true);
+  const showMoreBtn = tableClone.querySelector("#showMoreBtn");
+  if (showMoreBtn) showMoreBtn.remove();
+
+  // Add subtotal row
+  const tbody = tableClone.querySelector("tbody");
+  const subtotalRow = document.createElement("tr");
+  subtotalRow.innerHTML = `
+    <td colspan="9" style="text-align:right; font-weight:bold;">Subtotal:</td>
+    <td style="text-align:right; font-weight:bold;">${fmtQty(totalQty)}</td>
+    <td></td><td></td><td></td>
+    <td colspan="2" style="text-align:right; font-weight:bold;">${fmtCurrencyWithDecimals(totalAmount)}</td>
+    <td></td><td></td><td></td>
+  `;
+  tbody.appendChild(subtotalRow);
+
+  // ====== Print Layout ======
+  const printWin = window.open("", "", "width=900,height=700");
+  printWin.document.write(`
+    <html>
+      <head>
+        <title>${reportTitle}</title>
+        <style>
+          /* ===== General ===== */
+          body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            color: #111827;
+            margin: 0;
+            padding: 0;
+            background: #fff;
+          }
+
+          /* ===== Blue Banner Header ===== */
+          .header-banner {
+            background-color: white;
+            color: #1e3a8a;
+            text-align: center;
+            padding: 24px 20px;
+            border-bottom: 4px solid #2563eb;
+          }
+          .header-banner h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+          }
+          .header-banner h2 {
+            margin: 6px 0 0 0;
+            font-size: 18px;
+            font-weight: 500;
+          }
+
+          /* ===== Date Range Section ===== */
+          .date-range {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 15px;
+            color: #374151;
+          }
+
+          /* ===== Table ===== */
+          table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 13px;
+            border: 1px solid #d1d5db;
+          }
+          th, td {
+            border: 1px solid #d1d5db;
+            padding: 8px 10px;
+            text-align: left;
+          }
+          thead {
+            background-color: white;
+            color: 1e3a8a;
+            font-weight: 900;
+            font-size: 14px;
+          }
+          tbody tr:nth-child(even) {
+            background-color: #f9fafb;
+          }
+          tbody tr:hover {
+            background-color: #eef2ff;
+          }
+          tfoot {
+            background-color: #f3f4f6;
+            font-weight: bold;
+          }
+
+          /* ===== Footer ===== */
+          .footer {
+            margin-top: 40px;
+            font-size: 13px;
+            text-align: right;
+            color: #6b7280;
+          }
+
+          /* ===== Print Optimization ===== */
+          @media print {
+            body { margin: 0; }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+            tr, td, th { page-break-inside: avoid; }
+            .footer { position: fixed; bottom: 10px; right: 20px; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header-banner">
+          <h1>${companyName}</h1>
+          <h2>${reportTitle}</h2>
+        </div>
+
+        <div class="date-range">${dateRange}</div>
+
+        ${tableClone.outerHTML}
+
+        <div class="footer">
+          Printed on ${new Date().toLocaleString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+          })}
+        </div>
+      </body>
+    </html>
+  `);
+  printWin.document.close();
+  printWin.focus();
+
+  // Auto print & close
+  setTimeout(() => {
+    printWin.print();
+    printWin.close();
+  }, 600);
+}
+
+
+function formatDate(date) {
+  const options = { day: "numeric", month: "long", year: "numeric" };
+  return date.toLocaleDateString(undefined, options);
+}
+
+/* ======= Data Filters + Table/Card Rendering ======= */
+const dataColumns = [
+  { key: "Date", label: "Date" },
+  { key: "Transaction", label: "Transaction" },
+  { key: "Customer", label: "Customer" },
+  { key: "Flow", label: "Flow" },
+  { key: "Sector", label: "Sector" },
+  { key: "Subsector", label: "Subsector" },
+  { key: "Category", label: "Category" },
+  { key: "SubCat", label: "Subcategory" },
+  { key: "Item", label: "Item" },
+  { key: "Quantity", label: "Quantity" },
+  { key: "QtyScale", label: "Scale" },
+  { key: "Size", label: "Size" },
+  { key: "SizeScale", label: "Size Scale" },
+  { key: "UnitPrice", label: "Unit Price" },
+  { key: "ExtraCharges", label: "Extra Charges" },
+  { key: "TotalPrice", label: "Total Price" },
+  { key: "Attendant", label: "Attendant" },
+  { key: "Evidence", label: "Evidence" },
+  { key: "Note", label: "Note" }
+];
+
+/* ======= Calculation Base Toggle ======= */
+let calcBase = 'Revenue'; // 'Revenue' or 'qty'
+const calcBaseBtn = document.getElementById('calcBaseBtn');
+function updateCalcBaseBtn() {
+  if (calcBase === 'Revenue') {
+    calcBaseBtn.textContent = 'By Amount';
+    calcBaseBtn.style.background = '#1e40af';
+    calcBaseBtn.style.color = 'white';
+  } else {
+    calcBaseBtn.textContent = 'By Quantity';
+    calcBaseBtn.style.background = '#138F3F';
+    calcBaseBtn.style.color = 'white';
+  }
+}
+
+calcBaseBtn.onclick = function() {
+  calcBase = (calcBase === 'Revenue') ? 'qty' : 'Amount';
+  updateCalcBaseBtn();
+  buildCharts();
+};
+updateCalcBaseBtn();
+
+/* ======= Boot ======= */
+initTheme();
+populateSelectors();
+applyFilters();
+</script>
+</body>
+</html>

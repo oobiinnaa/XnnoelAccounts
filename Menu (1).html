@@ -1,0 +1,492 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- ===== META & TITLE ===== -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Xnnoel Accounts - Menu</title>
+
+  <!-- ===== ICONS, FONTS & LIBRARIES ===== -->
+  <link rel="stylesheet" href="https://unpkg.com/lucide-static/font/lucide.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <!-- ===== STYLES ===== -->
+  <style>
+    :root{
+      --bg:#0a1428; --text:#fff;
+      --sidebar-bg:rgba(0,0,0,.08);
+      --sidebar-hover:rgba(0,0,0,.15);
+      --sidebar-active:rgba(255,255,0,.01);
+      --header-bg:transparent;
+      --overlay-bg:rgba(0,0,0,.7);
+      --message-bg:rgba(30,41,59,.85);
+      --message-text:#f1f5f9;
+      --success-color:#10b981;
+      --error-color:#ef4444;
+    }
+
+    [data-theme="dark"]{
+      --bg:#0a1526;
+      --text:#DCE9FF;
+      --sidebar-bg:rgba(0,0,0,.08);
+    }
+
+    body{
+      margin:0;
+      font-family:Inter,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    .header{
+      display:flex;align-items:center;
+      background:var(--header-bg);
+      padding:8px 12px;
+      position:fixed;top:0;left:0;right:0;
+      z-index:100;
+    }
+    .menu-btn{font-size:28px;background:none;border:none;color:var(--text);cursor:pointer;}
+    .header-title{margin-left:6px;font-size:20px;}
+
+    .sidebar{
+      position:fixed;top:0;left:-300px;width:200px;height:100%;
+      background:var(--sidebar-bg);backdrop-filter:blur(12px);
+      padding:20px;display:flex;flex-direction:column;gap:8px;
+      transition:left .3s;z-index:1000;overflow-y:auto;
+    }
+    .sidebar.show{left:0;}
+    .sidebar button{
+      display:flex;align-items:center;padding:10px 12px;
+      border:none;border-radius:10px;background:transparent;
+      color:var(--text);font-size:14px;width:100%;text-align:left;cursor:pointer;
+    }
+    .sidebar button.active{
+      background:var(--sidebar-active);border-left:3px solid var(--success-color);font-weight:600;
+    }
+    .sidebar button:hover{background:var(--sidebar-hover);transform:translateX(4px);}
+    .overlay{
+      position:fixed;top:0;left:0;width:100%;height:100%;
+      background:var(--overlay-bg);display:none;z-index:500;
+    }
+    .overlay.show{display:block;}
+    .dashboard-container{
+      position:relative;height:calc(100vh - 50px);margin-top:50px;
+    }
+    .dashboard-frame{
+      width:100%;height:100%;border:none;transition:opacity .3s;
+    }
+    .clear-overlay{
+      position:fixed;top:0;left:0;width:100%;height:100%;
+      background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:3000;
+    }
+    .clear-box{
+      background:rgba(255,255,255,.1);backdrop-filter:blur(12px);
+      padding:20px;border-radius:8px;text-align:center;color:var(--text);
+      max-width:300px;box-shadow:0 4px 12px rgba(0,0,0,.2);
+    }
+    .clear-buttons{display:flex;justify-content:space-around;margin-top:15px;}
+    .confirm-btn,.cancel-btn{padding:8px 12px;border:none;border-radius:6px;font-weight:bold;cursor:pointer;}
+    .confirm-btn{background:var(--error-color);color:#fff;}
+    .confirm-btn:hover{background:#dc2626;}
+    .cancel-btn{background:#ccc;color:#000;}
+    .cancel-btn:hover{background:#aaa;}
+
+    /* ====== Spinner ====== */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* ======= Overlay Styles ======= */
+#exportOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.overlay-backdrop {
+  position: absolute;
+  inset: 0;
+}
+
+.overlay-box {
+  position: relative;
+  background: #000;
+  border-radius: 12px;
+  padding: 20px 25px;
+  text-align: center;
+  width: 280px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  animation: popIn 0.25s ease;
+}
+
+.overlay-box h3 {
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+}
+
+.overlay-actions {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-around;
+}
+
+.overlay-actions button {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+#cancelExportBtn {
+  background: #FF2525;
+  color: white;
+}
+
+#cancelExportBtn:hover {
+  background: #C80000;
+}
+
+#confirmExportBtn {
+  background: #0077b6;
+  color: white;
+}
+
+#confirmExportBtn:hover {
+  background: #023e8a;
+}
+
+@keyframes popIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <button class="menu-btn" id="menuBtn">&#9776;</button>
+    <span class="header-title" id="headerTitle">Home</span>
+  </div>
+
+  <div class="sidebar" id="sidebar">
+    <button data-page="Home.html" data-title="Home" data-icon="🏠" class="active">🏠 Home</button>
+    <button data-page="Revenue.html" data-title="Revenue" data-icon="📉">📉 Revenue</button>
+    <button data-page="Purchases.html" data-title="Purchases" data-icon="📦">📦 Purchases</button>
+    <button data-page="Admin.html" data-title="Admin Page" data-icon="🤵">🤵 Admin Page</button>
+    <hr style="border:none;border-top:1px solid #BFBFBF;margin:1px 0;">
+    <button id="clearFiltersBtn">🧹 Clear All Filters</button>
+    <button id="syncBtn">🔄 Sync Data</button>
+    <button id="clearDataBtn">🗑️ Clear Data</button>
+    <button id="themeBtn">🌙 Dark Mode</button>
+    <button id="reportsBtn">📊 Reports</button>
+    <button id="exportCsvBtn">📤 Export CSV</button>
+    <button id="settingsBtn">⚙️ Settings</button>
+    <button id="helpBtn">❓ Help</button>
+    <button class="logout-btn" id="logoutBtn">🚫 Logout</button>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+
+  <div class="dashboard-container">
+    <iframe class="dashboard-frame" id="dashboardFrame" src="Home.html">🤗 Welcome</iframe>
+  </div>
+
+  <div class="clear-overlay" id="clearOverlay">
+    <div class="clear-box">
+      <p>⚠️ Are you sure you want to clear all data? This cannot be undone.</p>
+      <div class="clear-buttons">
+        <button id="confirmClear" class="confirm-btn">Yes</button>
+        <button id="cancelClear" class="cancel-btn">No</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SYNC OVERLAY ===== -->
+  <div id="syncOverlay"
+       style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+       background:rgba(0,0,0,0.1); z-index:9999; justify-content:center; align-items:center;
+       transition:opacity .5s ease;">
+    <div id="syncBox"
+         style="background:rgba(25,25,25,0.95); padding:30px 50px; border-radius:14px;
+                text-align:center; font-family:'Segoe UI',sans-serif; color:#e0e0e0;
+                box-shadow:0 0 25px rgba(0,0,0,0.6);">
+      <div class="spinner"
+           style="border:5px solid rgba(255,255,255,0.15);
+                  border-top:5px solid #00bfff; border-radius:50%;
+                  width:55px; height:55px; margin:0 auto 15px;
+                  animation:spin 1s linear infinite;"></div>
+      <div id="syncMessage" style="font-size:18px; font-weight:500;">Syncing in progress...</div>
+    </div>
+  </div>
+  
+  <!-- ======= CONFIRM EXPORT OVERLAY ======= -->
+  <div id="exportOverlay" style="display:none;">
+    <div class="overlay-backdrop"></div>
+    <div class="overlay-box">
+      <h3>Export Data?</h3>
+      <p>This will download the current dataset as a CSV file.</p>
+      <div class="overlay-actions">
+        <button id="confirmExportBtn">Export</button>
+        <button id="cancelExportBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+  import { auth, onAuthStateChanged, signOut } from "./auth.js";
+
+  // Redirect if not signed in
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      window.location.href = "index.html";
+    }
+  });
+
+  // Logout function
+  window.logout = () => {
+    signOut(auth).then(() => {
+      window.location.href = "index.html";
+    });
+  };
+  
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      signOut(auth).then(() => {
+        window.location.href = "index.html";
+      });
+    });
+  }
+
+/* ================= MENU LOGIC ================= */
+const sidebar = document.getElementById('sidebar'),
+      overlay = document.getElementById('overlay'),
+      menuBtn = document.getElementById('menuBtn'),
+      iframe = document.getElementById('dashboardFrame'),
+      headerTitle = document.getElementById('headerTitle');
+
+menuBtn.addEventListener('click', () => {
+  sidebar.classList.toggle('show');
+  overlay.classList.toggle('show');
+});
+
+overlay.addEventListener('click', () => {
+  sidebar.classList.remove('show');
+  overlay.classList.remove('show');
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+  const activeBtn = document.querySelector('.sidebar button.active');
+  if (activeBtn) {
+    const icon = activeBtn.dataset.icon || '';
+    headerTitle.innerHTML = `${icon} ${activeBtn.dataset.title}`;
+    document.title = `Hellofeen Ltd - ${activeBtn.dataset.title}`;
+  }
+});
+
+document.querySelectorAll('.sidebar button[data-page]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    // ✅ Prevent reloading if same page is already open
+    if (iframe.src.endsWith(btn.dataset.page)) {
+      sidebar.classList.remove('show');
+      overlay.classList.remove('show');
+      return;
+    }
+
+    iframe.src = btn.dataset.page;
+    const icon = btn.dataset.icon || '';
+    headerTitle.innerHTML = `${icon} ${btn.dataset.title}`;
+    document.title = `Hellofeen Ltd - ${btn.dataset.title}`;
+
+    document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    sidebar.classList.remove('show');
+    overlay.classList.remove('show');
+  });
+});
+
+
+/* ================= THEME TOGGLE ================= */
+function updateBtnText(theme){document.getElementById('themeBtn').textContent=theme==='dark'?'☀️ Light Mode':'🌙 Dark Mode';}
+function initTheme(){const t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-theme',t);updateBtnText(t);}
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('theme',t);updateBtnText(t);}
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  const cur=document.documentElement.getAttribute('data-theme')||'light';
+  const nxt=cur==='dark'?'light':'dark';
+  setTheme(nxt);
+  if(iframe?.contentWindow)iframe.contentWindow.postMessage({action:'setTheme',theme:nxt},'*');
+});
+initTheme();
+
+/* ================= CLEAR DATA ================= */
+const clearOverlay=document.getElementById('clearOverlay');
+document.getElementById('clearDataBtn').addEventListener('click', () => {
+  clearOverlay.style.display = 'flex';
+});
+
+document.getElementById('cancelClear').addEventListener('click', () => {
+  clearOverlay.style.display = 'none';
+});
+
+document.getElementById('confirmClear').addEventListener('click', () => {
+  clearOverlay.style.display = 'none';
+  localStorage.clear();
+  
+  // Send message to all frames to clear their data
+  const iframes = document.querySelectorAll('iframe');
+  iframes.forEach(iframe => {
+    if (iframe.contentWindow) {
+      iframe.contentWindow.postMessage({ action: 'clearData' }, '*');
+    }
+  });
+  
+  // Reload the main frame content
+  if (iframe?.contentWindow) {
+    // Force reload of the current page
+    iframe.contentWindow.location.reload();
+  }
+});
+
+/* ================= SYNC ALL FRAMES ================= */
+const syncBtn = document.getElementById("syncBtn"),
+      syncOverlay = document.getElementById("syncOverlay"),
+      syncMessage = document.getElementById("syncMessage");
+
+// Define pages to sync
+const pagesToSync = ["Home.html", "Revenue.html", "Purchases.html"];
+
+// Create hidden iframes for background sync
+const hiddenFrameContainer = document.createElement("div");
+hiddenFrameContainer.style.display = "none";
+document.body.appendChild(hiddenFrameContainer);
+
+const frames = {};
+pagesToSync.forEach(page => {
+  const f = document.createElement("iframe");
+  f.src = page;
+  f.dataset.page = page;
+  f.style.display = "none";
+  hiddenFrameContainer.appendChild(f);
+  frames[page] = f;
+});
+
+syncBtn.addEventListener("click", async () => {
+  console.log("Starting full sync...");
+  syncMessage.textContent = "Clearing old data...";
+  syncOverlay.style.display = "flex";
+  syncOverlay.style.opacity = "1";
+
+  // Step 1: Clear localStorage globally
+  localStorage.clear();
+  if (iframe.contentWindow) iframe.contentWindow.postMessage({ action: "clearData" }, "*");
+
+  // Step 2: Clear all hidden frames before syncing
+  for (const page of pagesToSync) {
+    const frame = frames[page];
+    if (frame?.contentWindow) frame.contentWindow.postMessage({ action: "clearData" }, "*");
+    frame.src = frame.src; // reload
+  }
+
+  // Wait 2s for clearing to finish
+  await new Promise(r => setTimeout(r, 2000));
+
+  // Step 3: Start syncing
+  syncMessage.textContent = "Syncing in progress...";
+  if (iframe?.contentWindow) iframe.contentWindow.postMessage({ action: "sync" }, "*");
+
+  for (const page of pagesToSync) {
+    const frame = frames[page];
+    if (!frame) continue;
+    await new Promise(resolve => {
+      if (frame.contentWindow.document.readyState === "complete") {
+        frame.contentWindow.postMessage({ action: "sync" }, "*");
+        resolve();
+      } else {
+        frame.onload = () => {
+          frame.contentWindow.postMessage({ action: "sync" }, "*");
+          resolve();
+        };
+      }
+    });
+  }
+
+  // Step 4: Wrap up
+  console.log("All pages synced.");
+  syncMessage.textContent = "✅ Sync  in progress...";
+  setTimeout(() => {
+    syncOverlay.style.opacity = "0";
+    setTimeout(() => (syncOverlay.style.display = "none"), 600);
+  }, 2000);
+});
+
+/* ======= CLEAR FILTER BUTTON ======= */
+document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+  const iframe = document.getElementById('dashboardFrame'); // make sure this matches your iframe ID
+
+  if (iframe && iframe.contentWindow) {
+    iframe.contentWindow.postMessage({ action: 'clearAllFilters' }, '*');
+    console.log('🧹 Clear filter command sent to iframe');
+  } else {
+    console.warn('⚠️ No active iframe found');
+  }
+});
+
+/* ======= CSV EXPORT BUTTON (Safe Version) ======= */
+document.addEventListener("DOMContentLoaded", () => {
+  const exportBtn = document.getElementById('exportCsvBtn');
+  const overlay = document.getElementById('exportOverlay');
+  const confirmBtn = document.getElementById('confirmExportBtn');
+  const cancelBtn = document.getElementById('cancelExportBtn');
+  const iframe = document.getElementById('dashboardFrame');
+
+  if (!exportBtn) {
+    console.warn("⚠️ exportCsvBtn not found — skipping CSV export setup");
+    return;
+  }
+
+  exportBtn.addEventListener('click', () => {
+    if (overlay) {
+      overlay.style.display = 'flex'; // Show overlay
+    } else {
+      // If overlay doesn't exist, send command directly
+      console.warn("⚠️ exportOverlay not found — exporting directly");
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({ action: 'exportCsv' }, '*');
+      }
+    }
+  });
+
+  if (cancelBtn && overlay) {
+    cancelBtn.addEventListener('click', () => {
+      overlay.style.display = 'none';
+    });
+  }
+
+  if (confirmBtn && overlay) {
+    confirmBtn.addEventListener('click', () => {
+      overlay.style.display = 'none';
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({ action: 'exportCsv' }, '*');
+        console.log('📤 Export CSV command sent to iframe');
+      } else {
+        console.warn('⚠️ No active iframe found');
+      }
+    });
+  }
+});
+
+
+
+</script>
+</body>
+</html>

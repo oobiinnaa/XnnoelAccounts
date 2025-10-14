@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Xnnoel Accounts - Manage Users</title>
+<style>
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #eaf6ea; /* light green background */
+    padding: 20px;
+    margin: 0;
+  }
+  h2 {
+    text-align: center;
+    color: #2e7d32; /* dark green */
+    font-size: 26px;
+    margin-bottom: 20px;
+  }
+  .search-bar {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    gap: 10px;
+  }
+  .search-bar input,
+  .search-bar select {
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    width: 220px;
+    font-size: 14px;
+  }
+  .user-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .user-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.2s ease;
+  }
+  .user-card:hover {
+    transform: translateY(-5px);
+  }
+  .profile-pic {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+    border: 3px solid #2e7d32;
+  }
+  .user-name {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+  }
+  .user-email {
+    color: #555;
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  .user-role {
+    color: #2e7d32;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .user-dept {
+    font-size: 13px;
+    color: #777;
+    margin-bottom: 10px;
+  }
+  .actions {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  button {
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    color: white;
+    transition: background 0.2s ease;
+  }
+  .edit-btn {
+    background: #43a047;
+  }
+  .edit-btn:hover {
+    background: #2e7d32;
+  }
+  .delete-btn {
+    background: #e53935;
+  }
+  .delete-btn:hover {
+    background: #b71c1c;
+  }
+  .overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+  }
+  .modal {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  }
+  .modal h3 {
+    margin-top: 0;
+  }
+  .modal input,
+  .modal select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+  }
+  .save-btn {
+    background: #2e7d32;
+    color: white;
+    width: 100%;
+    padding: 10px;
+  }
+  .cancel-btn {
+    background: #ccc;
+    color: black;
+    width: 100%;
+    padding: 10px;
+  }
+  #spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  .spinner {
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #2e7d32;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>
+</head>
+<body>
+
+<h2>Manage Users</h2>
+<div id="statusMsg"></div>
+
+<div class="search-bar">
+  <input type="text" id="searchInput" placeholder="🔍 Search by name or email...">
+  <select id="filterStatus">
+    <option value="all">All Users</option>
+    <option value="approved">Approved</option>
+    <option value="pending">Pending</option>
+  </select>
+</div>
+
+<div id="spinner"><div class="spinner"></div></div>
+<div class="user-grid" id="userGrid" style="display:none;"></div>
+
+<!-- Delete Confirmation -->
+<div class="overlay" id="confirmOverlay">
+  <div class="modal">
+    <p>Are you sure you want to delete this user?</p>
+    <button class="delete-btn" id="confirmYes">Yes, Delete</button>
+    <button class="cancel-btn" id="confirmNo">Cancel</button>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="overlay" id="editOverlay">
+  <div class="modal">
+    <h3>Edit User</h3>
+    <input type="text" id="editName" placeholder="Name">
+    <input type="text" id="editDept" placeholder="Department">
+    <input type="text" id="editRole" placeholder="Role">
+    <select id="editStatus">
+      <option value="approved">Approved</option>
+      <option value="pending">Pending</option>
+    </select>
+    <input type="file" id="editPic" accept="image/*">
+    <button class="save-btn" id="saveEditBtn">Save Changes</button>
+    <button class="cancel-btn" id="cancelEditBtn">Cancel</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { getFirestore, collection, getDocs, query, where, doc, updateDoc, deleteDoc, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
+import { enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCrYjTGWvrSob257TtIq_PHaX4hM0EEqDw",
+  authDomain: "hellofeen-b2d44.firebaseapp.com",
+  projectId: "hellofeen-b2d44",
+  storageBucket: "hellofeen-b2d44.appspot.com",
+  messagingSenderId: "942758072679",
+  appId: "1:942758072679:web:2252b50126dfdf4586dfc2"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+enableIndexedDbPersistence(db);
+const auth = getAuth(app);
+const storage = getStorage(app);
+
+const userGrid = document.getElementById("userGrid");
+const spinner = document.getElementById("spinner");
+const confirmOverlay = document.getElementById("confirmOverlay");
+const confirmYes = document.getElementById("confirmYes");
+const confirmNo = document.getElementById("confirmNo");
+const editOverlay = document.getElementById("editOverlay");
+const saveEditBtn = document.getElementById("saveEditBtn");
+const cancelEditBtn = document.getElementById("cancelEditBtn");
+
+let allUsers = [];
+let deleteTargetId = null;
+let editTargetId = null;
+let newPicFile = null;
+
+// Auth & Real-time Loading
+onAuthStateChanged(auth, async (user) => {
+  spinner.style.display = "flex";
+  if (!user) {
+    alert("Please sign in.");
+    window.location.href = "signin.html";
+    return;
+  }
+  const q = query(collection(db, "users"), where("uid", "==", user.uid));
+  const userSnap = await getDocs(q);
+
+  if (userSnap.empty) {
+    alert("No user record found.");
+    window.location.href = "signin.html";
+    return;
+  }
+
+  const currentUserData = userSnap.docs[0].data();
+
+  if (currentUserData.role !== "Admin") {
+    alert("Access denied: Admins only!");
+    window.location.href = "dashboard.html";
+    return;
+  }
+
+  listenUsers();
+});
+
+function listenUsers() {
+  const q = query(collection(db, "users"), orderBy("name"), limit(50));
+  onSnapshot(q, snapshot => {
+    allUsers = snapshot.docs.map(docSnap => ({
+      id: docSnap.id,
+      name: docSnap.get("name"),
+      email: docSnap.get("email"),
+      role: docSnap.get("role"),
+      department: docSnap.get("department"),
+      profilePicURL: docSnap.get("profilePicURL"),
+      approved: docSnap.get("approved")
+    }));
+    displayUsers(allUsers);
+    spinner.style.display = "none";
+    userGrid.style.display = "grid";
+  });
+}
+
+function displayUsers(users) {
+  userGrid.innerHTML = "";
+  if (!users.length) {
+    userGrid.innerHTML = "<p>No users found.</p>";
+    return;
+  }
+  users.forEach(u => {
+    const card = document.createElement("div");
+    card.className = "user-card";
+    card.innerHTML = `
+      <img src="${u.profilePicURL || 'https://via.placeholder.com/90'}" class="profile-pic">
+      <div class="user-name">${u.name || "No Name"}</div>
+      <div class="user-email">${u.email || ""}</div>
+      <div class="user-role">${u.role || "N/A"}</div>
+      <div class="user-dept">${u.department || "Not Assigned"}</div>
+      <div class="actions">
+        <button class="edit-btn" data-id="${u.id}">✏️ Edit</button>
+        <button class="delete-btn" data-id="${u.id}">🗑️</button>
+      </div>
+    `;
+    userGrid.appendChild(card);
+  });
+  attachCardHandlers();
+}
+
+function attachCardHandlers() {
+  document.querySelectorAll(".delete-btn").forEach(btn => btn.addEventListener("click", e => {
+    deleteTargetId = e.target.dataset.id;
+    confirmOverlay.style.display = "flex";
+  }));
+  document.querySelectorAll(".edit-btn").forEach(btn => btn.addEventListener("click", e => openEditModal(e.target.dataset.id)));
+}
+
+function openEditModal(id) {
+  editTargetId = id;
+  const user = allUsers.find(u => u.id === id);
+  document.getElementById("editName").value = user.name || "";
+  document.getElementById("editDept").value = user.department || "";
+  document.getElementById("editRole").value = user.role || "";
+  document.getElementById("editStatus").value = user.approved ? "approved" : "pending";
+  editOverlay.style.display = "flex";
+}
+
+saveEditBtn.addEventListener("click", async () => {
+  const name = document.getElementById("editName").value;
+  const dept = document.getElementById("editDept").value;
+  const role = document.getElementById("editRole").value;
+  const status = document.getElementById("editStatus").value;
+  const approved = status === "approved";
+  let profilePicURL = allUsers.find(u => u.id === editTargetId).profilePicURL || "";
+
+  if (newPicFile) {
+    const picRef = ref(storage, `profilePics/${editTargetId}.jpg`);
+    await uploadBytes(picRef, newPicFile);
+    profilePicURL = await getDownloadURL(picRef);
+  }
+
+  await updateDoc(doc(db, "users", editTargetId), { name, department: dept, role, approved, profilePicURL });
+  editOverlay.style.display = "none";
+});
+
+cancelEditBtn.addEventListener("click", () => editOverlay.style.display = "none");
+document.getElementById("editPic").addEventListener("change", e => newPicFile = e.target.files[0]);
+
+confirmYes.onclick = async () => {
+  if (deleteTargetId) await deleteDoc(doc(db, "users", deleteTargetId));
+  confirmOverlay.style.display = "none";
+};
+confirmNo.onclick = () => confirmOverlay.style.display = "none";
+
+// Debounced search
+let searchTimeout;
+document.getElementById("searchInput").addEventListener("input", e => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    const term = e.target.value.toLowerCase();
+    displayUsers(allUsers.filter(u => (u.name || "").toLowerCase().includes(term) || (u.email || "").toLowerCase().includes(term)));
+  }, 300);
+});
+
+document.getElementById("filterStatus").addEventListener("change", e => {
+  const val = e.target.value;
+  displayUsers(val === "all" ? allUsers : allUsers.filter(u => val === "approved" ? u.approved : !u.approved));
+});
+</script>
+</body>
+</html>
